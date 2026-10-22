@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CYBER RH: OVERDRIVE BOSS BATTLES</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --panel-bg: #111827;
+      --border-neon: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.4);
+      --magenta: #ec4899;
+      --magenta-glow: rgba(236, 72, 153, 0.4);
+      --yellow: #eab308;
+      --yellow-glow: rgba(234, 179, 8, 0.4);
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); padding: 12px; line-height: 1.4; font-size: 16px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    h1, h2, h3, h4, .font-title { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+
+    .card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-neon);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    .title { font-size: 1.3rem; font-weight: 700; color: var(--cyan); margin-bottom: 4px; text-shadow: 0 0 10px var(--cyan-glow); }
+    .subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 14px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; color: var(--cyan); }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border-neon); border-radius: var(--radius);
+      font-size: 0.95rem; background: #0b0f19; color: var(--text-main); font-family: 'Rajdhani', sans-serif;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+
+    .btn {
+      background: linear-gradient(135deg, var(--cyan), #0284c7); color: #000; border: none; padding: 12px 18px;
+      border-radius: var(--radius); font-family: 'Orbitron', sans-serif; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; display: inline-block; text-align: center; text-transform: uppercase; font-size: 0.85rem;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 0 15px var(--cyan-glow); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-sec { background: transparent; color: var(--text-main); border: 1px solid var(--border-neon); }
+    .btn-sec:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(6,182,212,0.1); }
+    .btn-danger { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; font-family: 'Orbitron', sans-serif; }
+    .badge-success { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid var(--success); }
+    .badge-warning { background: rgba(234,179,8,0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+    .badge-danger { background: rgba(239,68,68,0.2); color: var(--danger); border: 1px solid var(--danger); }
+
+    .boss-card {
+      background: linear-gradient(180deg, #1e112a 0%, #0d0714 100%);
+      border: 2px solid var(--magenta);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 10px;
+      box-shadow: 0 0 20px var(--magenta-glow);
+      text-align: center;
+    }
+    .boss-icon { font-size: 3rem; margin-bottom: 6px; filter: drop-shadow(0 0 10px var(--magenta)); }
+    
+    .damage-shake {
+      animation: bossPain 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes bossPain {
+      0% { transform: translate(0, 0) scale(1); filter: drop-shadow(0 0 10px var(--danger)) hue-rotate(0deg); }
+      25% { transform: translate(-8px, 5px) scale(0.95); filter: drop-shadow(0 0 25px var(--danger)) hue-rotate(90deg); }
+      50% { transform: translate(8px, -5px) scale(1.05); filter: drop-shadow(0 0 35px #fff) hue-rotate(180deg); }
+      75% { transform: translate(-5px, -8px) scale(0.98); filter: drop-shadow(0 0 25px var(--danger)) hue-rotate(270deg); }
+      100% { transform: translate(5px, 8px) scale(1); filter: drop-shadow(0 0 10px var(--danger)) hue-rotate(360deg); }
+    }
+
+    .damage-shake-partial {
+      animation: bossPartial 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes bossPartial {
+      0% { transform: translate(0, 0) rotate(0deg); filter: drop-shadow(0 0 10px var(--yellow)); }
+      30% { transform: translate(-5px, 3px) rotate(-3deg); filter: drop-shadow(0 0 20px var(--yellow)); }
+      60% { transform: translate(5px, -3px) rotate(3deg); filter: drop-shadow(0 0 25px #fff); }
+      100% { transform: translate(-2px, 2px) rotate(0deg); filter: drop-shadow(0 0 15px var(--yellow)); }
+    }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none;
+      align-items: center; justify-content: center; z-index: 9999; padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--panel-bg); border: 2px solid var(--cyan); border-radius: var(--radius);
+      padding: 24px; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 0 30px var(--cyan-glow);
+    }
+
+    .nav-tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border-neon); padding-bottom: 8px; flex-wrap: wrap; }
+    .tab-btn { background: none; border: none; padding: 8px 14px; font-weight: 700; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; border-radius: var(--radius); font-family: 'Orbitron', sans-serif; }
+    .tab-btn.active { background: var(--cyan); color: #000; box-shadow: 0 0 10px var(--cyan-glow); }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .opt-card {
+      border: 1px solid var(--border-neon); border-radius: 8px; padding: 12px; margin-bottom: 8px;
+      background: #0b0f19; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;
+    }
+    .opt-card:hover { border-color: var(--cyan); background: rgba(6,182,212,0.05); }
+    .opt-card input { width: auto; margin-top: 3px; }
+
+    .timer { font-size: 2.2rem; font-weight: 900; color: var(--cyan); text-align: center; margin: 10px 0; font-family: 'Orbitron', sans-serif; text-shadow: 0 0 10px var(--cyan-glow); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+    th, td { border: 1px solid var(--border-neon); padding: 10px; text-align: left; }
+    th { background: #0b0f19; color: var(--cyan); font-family: 'Orbitron', sans-serif; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- MODAL DE VITORIA TOTAL DO BOSS -->
+  <div id="modal-vitoria" class="modal-overlay">
+    <div class="modal-content" style="border-color: var(--success); box-shadow: 0 0 35px rgba(16,185,129,0.5);">
+      <div style="font-size:3.5rem; margin-bottom:10px;">🏆</div>
+      <h2 style="color:var(--success); font-size:1.5rem; margin-bottom:8px;">MEGABOSS ELIMINADO!</h2>
+      <p style="font-size:1rem; margin-bottom:14px; color:var(--text-main);">Sua estratégia tática e estrutural desmantelou completamente a crise corporativa!</p>
+      <div style="background:#0b0f19; padding:12px; border-radius:8px; border:1px solid var(--success); margin-bottom:16px;">
+        <p style="color:var(--success); font-weight:700;">+20 PTS DE BÔNUS NO PITCH DE MITIGAÇÃO</p>
+        <small style="color:var(--text-muted);">A crise foi completamente mitigada antes do colapso.</small>
+      </div>
+      <button class="btn" style="background:var(--success); color:#000; width:100%;" onclick="fecharModal('modal-vitoria')">Acessar Resumo do Pitch</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE VITORIA PARCIAL DO BOSS -->
+  <div id="modal-parcial" class="modal-overlay">
+    <div class="modal-content" style="border-color: var(--yellow); box-shadow: 0 0 35px rgba(234,179,8,0.5);">
+      <div style="font-size:3.5rem; margin-bottom:10px;">⚡</div>
+      <h2 style="color:var(--yellow); font-size:1.5rem; margin-bottom:8px;">MITIGAÇÃO PARCIAL!</h2>
+      <p style="font-size:1rem; margin-bottom:14px; color:var(--text-main);">Sua equipe acertou parte da estratégia, contendo os danos diretos do Megaboss!</p>
+      <div style="background:#0b0f19; padding:12px; border-radius:8px; border:1px solid var(--yellow); margin-bottom:16px;">
+        <p style="color:var(--yellow); font-weight:700;">+10 PTS DE BÔNUS NO PITCH</p>
+        <small style="color:var(--text-muted);">A crise foi controlada, mas exige ajustes no plano para evitar efeitos colaterais.</small>
+      </div>
+      <button class="btn" style="background:var(--yellow); color:#000; width:100%;" onclick="fecharModal('modal-parcial')">Acessar Resumo do Pitch</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE DERROTA / COLAPSO OPERACIONAL -->
+  <div id="modal-derrota" class="modal-overlay">
+    <div class="modal-content" style="border-color: var(--danger); box-shadow: 0 0 35px rgba(239,68,68,0.5);">
+      <div style="font-size:3.5rem; margin-bottom:10px;">🚨</div>
+      <h2 style="color:var(--danger); font-size:1.4rem; margin-bottom:8px;">COLAPSO OPERACIONAL!</h2>
+      <p style="font-size:0.95rem; margin-bottom:14px; color:var(--text-main);">O Megaboss sobreviveu ao ataque. Suas decisões geraram passivos e insatisfação no setor.</p>
+      <div style="background:#0b0f19; padding:12px; border-radius:8px; border:1px solid var(--danger); margin-bottom:16px; text-align:left;">
+        <p style="color:var(--danger); font-weight:700;">⚠️ Efeitos do Colapso:</p>
+        <p style="font-size:0.85rem; color:var(--text-muted);">• Penalidade de -15 pts no Orçamento da próxima rodada.<br>• Defesa obrigatória de emergência no Pitch da Banca.</p>
+      </div>
+      <button class="btn" style="background:var(--danger); color:#fff; width:100%;" onclick="fecharModal('modal-derrota')">Preparar Defesa do Pitch</button>
+    </div>
+  </div>
+
+  <!-- TELA INICIAL -->
+  <div id="screen-home" class="screen active card" style="text-align:center; padding:40px 20px;">
+    <h1 class="title" style="font-size:2.2rem; margin-bottom:10px;">CYBER RH: OVERDRIVE</h1>
+    <p class="subtitle" style="font-size:1.1rem; max-width:600px; margin:0 auto 24px auto;">RPG de Gestão de Pessoas &amp; Batalhas contra Megabosses Corporativos (UFAM)</p>
+    <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn" style="padding:16px 32px; font-size:1rem;" onclick="tentarEntrarMestre()">Mesa do Game Master / Banca</button>
+      <button class="btn btn-sec" style="padding:16px 32px; font-size:1rem;" onclick="mudarTela('screen-grupo-login')">Entrada das Equipes</button>
+    </div>
+  </div>
+
+  <!-- TELA LOGIN DE GRUPOS -->
+  <div id="screen-grupo-login" class="screen card">
+    <button class="btn btn-sec" onclick="mudarTela('screen-home')" style="margin-bottom:14px;">&larr; Voltar</button>
+    <h2 class="title">Acesso da Equipe de Gestão</h2>
+    <div class="form-group" style="max-width:400px; margin-top:14px;">
+      <label for="select-grupo-login">Selecione a sua Equipe:</label>
+      <select id="select-grupo-login"></select>
+    </div>
+    <button class="btn" onclick="entrarComoGrupo()">Acessar Painel da Equipe</button>
+  </div>
+
+  <!-- PAINEL DO MESTRE / RH -->
+  <div id="screen-mestre" class="screen">
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h2 class="title">Mesa do Mestre / Banca RH</h2>
+        <p class="subtitle" style="margin:0;">Mediação Técnica e Avaliação da Partida</p>
+      </div>
+      <button class="btn btn-sec" onclick="mudarTela('screen-home')">Sair</button>
+    </div>
+
+    <div class="nav-tabs">
+      <button id="tab-btn-mestre-setup" class="tab-btn active" onclick="switchMestreTab('mestre-setup')">1. Sorteio &amp; Rodada</button>
+      <button id="tab-btn-mestre-combate" class="tab-btn" onclick="switchMestreTab('mestre-combate')">2. Luta Bosses</button>
+      <button id="tab-btn-mestre-decisoes" class="tab-btn" onclick="switchMestreTab('mestre-decisoes')">3. Decisões &amp; Alertas</button>
+      <button id="tab-btn-mestre-comunicados" class="tab-btn" onclick="switchMestreTab('mestre-comunicados')">4. Comunicados</button>
+      <button id="tab-btn-mestre-timer" class="tab-btn" onclick="switchMestreTab('mestre-timer')">5. Tempo</button>
+      <button id="tab-btn-mestre-ranking" class="tab-btn" onclick="switchMestreTab('mestre-ranking')">6. Placar Final &amp; Análise</button>
+    </div>
+
+    <!-- TAB 1: CADASTRO E SORTEIO -->
+    <div id="mestre-setup" class="mestre-tab-content">
+      <div class="grid">
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">Equipes de Gestão</h3>
+          <div class="form-group">
+            <label for="num-grupos">Quantidade de Equipes (3 a 6):</label>
+            <select id="num-grupos" onchange="alterarQuantidadeGrupos()">
+              <option value="3">3 Equipes</option>
+              <option value="4" selected>4 Equipes</option>
+              <option value="5">5 Equipes</option>
+              <option value="6">6 Equipes</option>
+            </select>
+          </div>
+          <div id="container-inputs-grupos"></div>
+          <button class="btn" onclick="salvarGrupos()">Salvar Equipes</button>
+        </div>
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">Controle da Rodada &amp; Cartas</h3>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+            <button class="btn" onclick="sortearCartas()">Sortear Cartas de Crise / Megabosses</button>
+            <button class="btn btn-danger" onclick="reiniciarRodada()">🔄 Nova Rodada</button>
+            <button class="btn btn-sec" onclick="limparHistoricoCartasApenas()" style="border-color: var(--danger); color: var(--danger);">🗑️ Limpar Histórico de Cartas Sorteadas</button>
+          </div>
+          <div id="resultado-sorteio-mestre" style="margin-top:12px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: LUTA BOSSES -->
+    <div id="mestre-combate" class="mestre-tab-content" style="display:none;">
+      <div class="card">
+        <h3 class="title" style="font-size:1.1rem;">⚔️ Monitor de Combate contra Megabosses</h3>
+        <p class="subtitle">Acompanhe em tempo real o enfrentamento das equipes e o estado das crises corporativas.</p>
+        <div id="container-monitor-bosses" class="grid" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- TAB 3: DECISÕES E ALERTAS DE CONSULTORIA -->
+    <div id="mestre-decisoes" class="mestre-tab-content" style="display:none;">
+      <div id="alerta-consultoria-mestre" style="display:none;" class="card" style="border-left: 6px solid var(--danger); background:#1e1114; margin-bottom:14px;">
+        <h3 class="title" style="font-size:1.05rem; color:var(--danger); margin-bottom:8px;">🚨 Consultorias Solicitadas</h3>
+        <div id="lista-alertas-consultoria" style="font-size:0.9rem;"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="title" style="font-size:1.1rem;">Decisões &amp; Avaliação em Tempo Real</h3>
+        <div id="container-mestre-decisoes-detalhadas" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: GERENCIAR COMUNICADOS -->
+    <div id="mestre-comunicados" class="mestre-tab-content" style="display:none;">
+      <div class="grid">
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">Enviar Orientação / Aviso</h3>
+          <div class="form-group">
+            <label for="select-destinatario-msg">Destinatário:</label>
+            <select id="select-destinatario-msg"></select>
+          </div>
+          <div class="form-group">
+            <label for="texto-msg">Orientação Técnica / Regra Extra:</label>
+            <textarea id="texto-msg" rows="3"></textarea>
+          </div>
+          <button class="btn" onclick="enviarMensagemMestre()">Enviar Comunicado</button>
+        </div>
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">Histórico &amp; Exclusão de Avisos</h3>
+          <div id="container-gerenciar-mensagens-mestre" style="max-height: 350px; overflow-y: auto; margin-top:10px;">
+            <p class="subtitle">Nenhum comunicado enviado.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: CRONÔMETROS -->
+    <div id="mestre-timer" class="mestre-tab-content" style="display:none;">
+      <div class="grid">
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">Cronômetro Geral de Deliberação</h3>
+          <div class="form-group">
+            <select id="stage-timer-select" onchange="setMasterTimerStage()">
+              <option value="600">Etapa 1: Setup (10 min)</option>
+              <option value="300">Etapa 2: Distribuição de Crises (5 min)</option>
+              <option value="1200">Etapa 3: Deliberação (20 min)</option>
+              <option value="1500">Etapa 4: Pitches (25 min)</option>
+              <option value="900">Etapa 5: Debriefing (15 min)</option>
+            </select>
+          </div>
+          <div class="timer" id="display-master-timer">10:00</div>
+          <div class="btn-group" style="justify-content:center;">
+            <button class="btn" onclick="startMasterTimer()">Iniciar</button>
+            <button class="btn btn-sec" onclick="pauseMasterTimer()">Pausar</button>
+            <button class="btn btn-danger" onclick="resetMasterTimer()">🛑 Encerrar</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">⏱️ Cronômetro de Pitch</h3>
+          <div class="form-group">
+            <label for="select-grupo-timer-individual">Selecione a Equipe:</label>
+            <select id="select-grupo-timer-individual" onchange="mudarGrupoPitch()"></select>
+          </div>
+          <div class="timer" id="display-group-timer" style="color: var(--success);">05:00</div>
+          <div class="btn-group" style="justify-content:center;">
+            <button class="btn" style="background:var(--success); color:#000;" onclick="startGroupTimer()">Iniciar Pitch</button>
+            <button class="btn btn-sec" onclick="pausarEfetuarRegistroPitch()">Pausar &amp; Salvar</button>
+            <button class="btn btn-sec" onclick="resetGroupTimer()">Resetar</button>
+          </div>
+          <div id="status-tempo-equipe-atual" style="margin-top:10px; font-size:0.85rem; font-weight:700; text-align:center;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: RANKING E TENDÊNCIAS -->
+    <div id="mestre-ranking" class="mestre-tab-content" style="display:none;">
+      <div class="grid">
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">Nota do Pitch</h3>
+          <div class="form-group">
+            <label for="select-grupo-eval">Equipe:</label>
+            <select id="select-grupo-eval" onchange="carregarPontuacaoGrupo()"></select>
+          </div>
+          <div class="form-group">
+            <label>Qualidade do Pitch pela Banca:</label>
+            <input type="number" id="pilar-pitch-qualidade" min="0" max="20" value="15" oninput="calcMediaRanking()">
+          </div>
+          <div style="background:#0b0f19; padding:10px; border-radius:8px; border:1px solid var(--border-neon); font-size:0.85rem; margin-bottom:12px;">
+            <p><strong>Tempo no pitch:</strong> <span id="info-tempo-pitch-calc" style="color:var(--cyan);">Não registrado</span></p>
+            <p><strong>Bônus de Velocidade:</strong> <span id="info-bonus-velocidade">0 pts</span></p>
+            <p><strong>Bônus/Penalidade do Boss:</strong> <span id="info-bonus-boss" style="font-weight:700;">0 pts</span></p>
+            <p style="margin-top:4px; font-weight:700; color:var(--success);">Nota Final do Pitch: <span id="display-nota-pitch-final">15</span> / 20 pts</p>
+          </div>
+          <p style="text-align:center; font-weight:700; margin:10px 0;">Total Geral: <span id="display-nota-final" style="color:var(--cyan);">0</span> / 100 pts</p>
+          <button class="btn" style="width:100%;" onclick="salvarPontuacaoGrupo()">Salvar Nota do Pitch</button>
+        </div>
+
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">Placar Geral Automático</h3>
+          <table>
+            <thead>
+              <tr><th>Pos.</th><th>Equipe</th><th>Automática</th><th>Pitch</th><th>Total</th></tr>
+            </thead>
+            <tbody id="tbody-ranking"></tbody>
+          </table>
+          <div style="margin-top: 14px; display: flex; gap: 8px;">
+            <button class="btn" style="flex: 1;" onclick="salvarRodadaNoHistorico()">💾 Salvar Rodada</button>
+            <button class="btn btn-danger" onclick="limparHistoricoRodadas()">🗑️ Limpar Histórico</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <h3 class="title" style="font-size:1.1rem;">📈 Análise de Tendências &amp; Histórico</h3>
+        <div id="container-historico-tendencias" style="overflow-x: auto; margin-top:10px;">
+          <p class="subtitle">Nenhuma rodada salva no histórico ainda.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL DA EQUIPE -->
+  <div id="screen-grupo" class="screen">
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h2 class="title" id="grupo-header-nome">Painel da Equipe</h2>
+        <span class="badge badge-warning" id="display-saldo-orçamento">Orçamento: 100 pts</span>
+      </div>
+      <button class="btn btn-sec" onclick="mudarTela('screen-grupo-login')">Trocar Equipe</button>
+    </div>
+
+    <div class="nav-tabs">
+      <button id="tab-grupo-decisao" class="tab-btn active" onclick="switchGrupoTab('decisao')">⚔️ Combate &amp; Resolução</button>
+      <button id="tab-grupo-historico" class="tab-btn" onclick="switchGrupoTab('historico')">📜 Meu Histórico</button>
+      <button id="tab-grupo-orientacoes" class="tab-btn" onclick="switchGrupoTab('orientacoes')">📢 Comunicados</button>
+    </div>
+
+    <div id="grupo-tab-content-decisao" class="grupo-tab-pane">
+      <div class="grid">
+        <div>
+          <!-- CARTA DE CRISE / BOSS -->
+          <div class="card">
+            <h3 class="title" style="font-size:1.1rem;">Carta de Crise / Megaboss</h3>
+            <div id="container-carta-grupo">
+              <p class="subtitle">Aguardando sorteio do Mestre...</p>
+            </div>
+          </div>
+
+          <!-- CONSULTORIAS -->
+          <div class="card">
+            <h3 class="title" style="font-size:1.1rem;">Consultoria Técnica (-5 pts)</h3>
+            <p class="subtitle">Especialistas disponíveis:</p>
+            <div id="container-consultores-grupo" class="btn-group"></div>
+            <div id="historico-consultas-grupo" style="margin-top:10px; font-size:0.85rem;"></div>
+          </div>
+        </div>
+
+        <!-- TOMADA DE DECISÃO / ATAQUE -->
+        <div class="card">
+          <h3 class="title" style="font-size:1.1rem;">Tomada de Decisão Estratégica</h3>
+          
+          <div id="form-combate-squad">
+            <div class="form-group">
+              <label id="lbl-q1">1. Decisão Tática Imediata:</label>
+              <div id="opts-q1"></div>
+            </div>
+
+            <div class="form-group">
+              <label id="lbl-q2">2. Política e Reformulação Estrutural:</label>
+              <div id="opts-q2"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="decisao-justificativa-pitch">Síntese do Argumento para o Pitch:</label>
+              <textarea id="decisao-justificativa-pitch" rows="3" placeholder="Resuma a lógica da equipe..."></textarea>
+            </div>
+
+            <button id="btn-enviar-decisao" class="btn" style="width:100%;" onclick="enviarDecisaoGrupo()">🔥 Realizar Ataque / Submeter Decisão</button>
+          </div>
+
+          <div id="status-bloqueio-ataque" style="display:none; text-align:center; padding:16px; background:#0b0f19; border:1px solid var(--success); border-radius:8px; margin-top:10px;">
+            <p style="color:var(--success); font-weight:700; font-size:1.1rem;">🔒 ATAQUE REALIZADO E REGISTRADO!</p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Suas escolhas foram submetidas com sucesso. Consulte a aba "Meu Histórico" para o Pitch.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTÓRICO PESSOAL -->
+    <div id="grupo-tab-content-historico" class="grupo-tab-pane" style="display:none;">
+      <div class="card">
+        <h3 class="title" style="font-size:1.1rem;">📜 Histórico de Decisões &amp; Resumo para o Pitch</h3>
+        <div id="container-historico-pessoal-grupo">
+          <p class="subtitle">Nenhuma decisão submetida ainda.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMUNICADOS DA EQUIPE -->
+    <div id="grupo-tab-content-orientacoes" class="grupo-tab-pane" style="display:none;">
+      <div class="card">
+        <h3 class="title" style="font-size:1.1rem;">Feed de Orientações da Banca</h3>
+        <div id="container-orientacoes-tempo-real" style="margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SCRIPT PRINCIPAL DA APLICAÇÃO (GLOBAL) -->
+<script>
+  // ATENÇÃO: senha local é apenas barreira visual; segurança real exige Firebase Auth e regras.
+  var SENHA_MESTRE = "rh2026";
+  function escaparHTML(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function limitar(n, minimo, maximo) { n = Number(n); return Number.isFinite(n) ? Math.min(maximo, Math.max(minimo,n)) : minimo; }
+  function atualizarTempoPitchVisual() {
+    var el = document.getElementById('display-group-timer');
+    if (el) el.innerText = formatarTempoMMSS(Math.max(0, 300 - segundosGastosAtual));
+  }
+  var snapshotBase = null;
+  var sincronizacaoPronta = false;
+  var alteracoesPendentes = [];
+  function capturarFormularioEquipe() {
+    var a = document.querySelector('#opts-q1 input:checked');
+    var b = document.querySelector('#opts-q2 input:checked');
+    var t = document.getElementById('decisao-justificativa-pitch');
+    return {a:a ? a.value : null,b:b ? b.value : null,t:t ? t.value : ''};
+  }
+  function restaurarFormularioEquipe(d) {
+    if (!d) return;
+    var a = Array.from(document.querySelectorAll('#opts-q1 input')).find(function(e){return e.value === d.a;});
+    var b = Array.from(document.querySelectorAll('#opts-q2 input')).find(function(e){return e.value === d.b;});
+    if (a) a.checked = true; if (b) b.checked = true;
+    var t = document.getElementById('decisao-justificativa-pitch'); if (t) t.value = d.t;
+  }
+  function pontuacaoCalculada(p, qualidade, tempo) {
+    p = p || {};
+    var bonusTempo = tempo > 0 && tempo <= 180 ? 2 : (tempo > 180 && tempo <= 270 ? 1 : 0);
+    var bonusBoss = Number(p.bonusBoss) || 0;
+    var notaBanca = limitar(qualidade,0,20);
+    var pitch = limitar(notaBanca + bonusTempo + Math.max(0,bonusBoss),0,20);
+    var automatico = limitar(p.fund,0,40) + limitar(p.viab,0,30) + limitar(p.saldo,0,10);
+    // Penalidade de colapso afeta o orçamento da próxima rodada, não a nota do pitch atual.
+    return {pitch:pitch,total:limitar(automatico + pitch,0,100),bonusTempo:bonusTempo,bonusBoss:bonusBoss};
+  }
+
+  var CARTAS_CRISE = [
+    {
+      id: 'c1',
+      categoria: 'Equilíbrio Interno vs. Orçamento',
+      emoji: '👾',
+      titulo: 'Carta 01 — Giga-Bug dos Juniores',
+      setor: 'Tecnologia da Informação',
+      ameaca: 'AMEAÇA: Risco de demissão coletiva dos Plenos.',
+      desc: 'Novos Juniores contratados a R$ 5.500,00. Plenos antigos que os treinam recebem R$ 5.200,00.',
+      consultoresPermitidos: ['Carlos (Equidade Interna)', 'Guilherme (Controller)'],
+      q1: 'Qual ação imediata deve ser tomada sem estourar a folha anual?',
+      opts1: [
+        { texto: 'Reequilibrar a faixa: Promover/ajustar os Plenos por alinhamento e corrigir o piso de entrada dos Juniores.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Conceder aumento geral de 15% para toda a empresa para acalmar os ânimos.', ptsFund: 15, ptsViab: 10, ideal: false },
+        { texto: 'Ignorar as reclamações dos Plenos e manter os salários como estão.', ptsFund: 0, ptsViab: 0, ideal: false }
+      ],
+      q2: 'Como reformular a tabela salarial para impedir esta distorção?',
+      opts2: [
+        { texto: 'Fixar amplitude de faixas e teto rigoroso para recrutamento no piso do cargo.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Criar bônus informal sem alterar a tabela salarial.', ptsFund: 10, ptsViab: 15, ideal: false }
+      ]
+    },
+    {
+      id: 'c2',
+      categoria: 'Equilíbrio Interno vs. Orçamento',
+      emoji: '🐉',
+      titulo: 'Carta 02 — Leviatã da Escala Operacional',
+      setor: 'Logística e Operações',
+      ameaca: 'AMEAÇA: Quebra na hierarquia e recusa de liderança.',
+      desc: 'Reajuste de 12% do sindicato fez Operadores I ganharem o mesmo que Supervisores de Operações.',
+      consultoresPermitidos: ['Luiza (Trilha Carreira)', 'Ana Jully (Consultora Legal)'],
+      q1: 'Como reajustar a faixa salarial dos Supervisores sem estender 12% a toda a empresa?',
+      q2: 'Quais critérios não financeiros podem recompor a atratividade do cargo?',
+      opts1: [
+        { texto: 'Reestruturar o piso dos Supervisores com diferencial mínimo de 15% a 20% sobre subordinados.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Repassar o reajuste linear de 12% a todos os cargos da empresa.', ptsFund: 10, ptsViab: 5, ideal: false }
+      ],
+      opts2: [
+        { texto: 'Oferecer aceleração de carreira, capacitação executiva e benefícios de gestão.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Manter Supervisores sem benefícios adicionais.', ptsFund: 0, ptsViab: 0, ideal: false }
+      ]
+    },
+    {
+      id: 'c3',
+      categoria: 'Atração e Retenção',
+      emoji: '📊',
+      titulo: 'Carta 03 — Dança das Cadeiras',
+      setor: 'Serviços Financeiros / Fintech',
+      ameaca: 'AMEAÇA: Fuga de talentos críticos.',
+      desc: 'Concorrente ofereceu +40% de salário para Analistas de Riscos Seniores. Três já saíram.',
+      consultoresPermitidos: ['Anna (Pesquisa Mercado)', 'Guilherme (Controller)'],
+      q1: 'A empresa deve cobrir a proposta para todos os restantes? Justifique.',
+      q2: 'Qual plano de retenção emergencial pode ser criado em 48h?',
+      opts1: [
+        { texto: 'Análise de Matriz Crítica: Cobrir proposta (match) apenas para talentos essenciais/chave.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Dar contraproposta generalizada de +40% para 100% da equipe.', ptsFund: 15, ptsViab: 10, ideal: false }
+      ],
+      opts2: [
+        { texto: 'Criar Bônus de Permanência (Retention Bonus) atrelado a metas de médio prazo e benefícios flexíveis.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Oferecer apenas folga de aniversário.', ptsFund: 5, ptsViab: 5, ideal: false }
+      ]
+    },
+    {
+      id: 'c4',
+      categoria: 'Atração e Retenção',
+      emoji: '🏡',
+      titulo: 'Carta 04 — Dilema do Home Office',
+      setor: 'Marketing Digital',
+      ameaca: 'AMEAÇA: Demissão em massa (60% da equipa).',
+      desc: 'A diretoria exige trabalho 100% presencial, mas o mercado oferece vagas remotas/híbridas.',
+      consultoresPermitidos: ['Ana Jully (Consultora Legal)', 'Anna (Pesquisa Mercado)'],
+      q1: 'Como mediar o impasse entre Diretoria e colaboradores?',
+      q2: 'Proponha um pacote de benefícios/flexibilidade que reduza o turnover.',
+      opts1: [
+        { texto: 'Negociar Modelo Híbrido baseado em entregas (ex: 2x presencial, 3x remoto) com dados de produtividade.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Aceitar a imposição 100% presencial da Diretoria sem questionar.', ptsFund: 5, ptsViab: 0, ideal: false }
+      ],
+      opts2: [
+        { texto: 'Implementar Auxílio Home Office e Cartão de Benefícios Flexíveis.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Não oferecer flexibilidade nem benefícios adicionais.', ptsFund: 0, ptsViab: 0, ideal: false }
+      ]
+    },
+    {
+      id: 'c5',
+      categoria: 'Negociação Sindical',
+      emoji: '⚖️',
+      titulo: 'Carta 05 — A Greve Iminente',
+      setor: 'Manufatura Eletrônica',
+      ameaca: 'AMEAÇA: Paralisação da fábrica.',
+      desc: 'Sindicato exige redução de jornada de 44h para 40h sem redução salarial.',
+      consultoresPermitidos: ['Ana Jully (Consultora Legal)', 'Guilherme (Controller)'],
+      q1: 'Quais contrapropostas flexíveis apresentar?',
+      q2: 'Como estruturar a comunicação interna para evitar o pânico?',
+      opts1: [
+        { texto: 'Troca estruturada: Redução gradual de jornada atrelada a metas de produtividade e Banco de Horas.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Ceder totalmente às exigências do sindicato sem contrapartida operacional.', ptsFund: 10, ptsViab: 5, ideal: false }
+      ],
+      opts2: [
+        { texto: 'Comunicação transparente com boletins informativos e diálogo constante com líderes.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Manter sigilo absoluto e proibir conversas sobre a greve.', ptsFund: 5, ptsViab: 5, ideal: false }
+      ]
+    },
+    {
+      id: 'c6',
+      categoria: 'Negociação Sindical e CLT',
+      emoji: '💰',
+      titulo: 'Carta 06 — Bonificação Desgovernada',
+      setor: 'Comercial e Vendas',
+      ameaca: 'AMEAÇA: Passivo trabalhista e equiparação salarial.',
+      desc: 'Gerentes pagam comissões informais "por fora" para bater metas, gerando riscos legais.',
+      consultoresPermitidos: ['Ana Jully (Consultora Legal)', 'Guilherme (Controller)'],
+      q1: 'Como regularizar as bonificações perante a CLT (Art. 457)?',
+      q2: 'Como desenhar uma política clara de Remuneração Variável?',
+      opts1: [
+        { texto: 'Anulação do pagamento informal e formalização imediata da política de Prêmios (Art. 457 da CLT).', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Manter o pagamento por fora ajustando apenas o valor verbalmente.', ptsFund: 0, ptsViab: 0, ideal: false }
+      ],
+      opts2: [
+        { texto: 'Regulamentar Padrões de Desempenho e estender metas bônus com regras claras.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Deixar a critério informal de cada gerente regional.', ptsFund: 0, ptsViab: 0, ideal: false }
+      ]
+    }
+  ];
+
+  var appState = {
+    grupos: ['Equipe Alfa', 'Equipe Beta', 'Equipe Gamma', 'Equipe Delta'],
+    crises: {},
+    decisoes: {},
+    historicoDecisoesGrupos: {},
+    temposPitchEquipes: {}, 
+    mensagens: [],
+    pontuacoes: {},
+    consultas: {},
+    penalidadesGrupos: {},
+    historicoRodadas: [],
+    cartasSorteadasPorGrupo: {},
+    tempoEsgotadoGlobal: false,
+    currentScreen: 'screen-home'
+  };
+
+  var grupoAtivo = localStorage.getItem('cyber_rh_grupo_ativo') || '';
+
+  function fecharModal(id) { 
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('active'); 
+  }
+
+  function tentarEntrarMestre() {
+    var s = prompt("Senha do Mestre:");
+    if (s === SENHA_MESTRE) {
+      mudarTela('screen-mestre');
+    } else if (s !== null) {
+      alert("Senha incorreta!");
+    }
+  }
+
+  function mudarTela(id) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    var alvo = document.getElementById(id);
+    if (alvo) {
+      alvo.classList.add('active');
+      appState.currentScreen = id;
+      atualizarInterface();
+    }
+  }
+
+  function updateSelects() {
+    var selL = document.getElementById('select-grupo-login');
+    var selM = document.getElementById('select-destinatario-msg');
+    var selE = document.getElementById('select-grupo-eval');
+    var selInd = document.getElementById('select-grupo-timer-individual');
+    var optionsHtml = appState.grupos.map(function(g) { return '<option value="' + escaparHTML(g) + '">' + escaparHTML(g) + '</option>'; }).join('');
+    
+    if (selL) selL.innerHTML = optionsHtml;
+    if (selM) selM.innerHTML = '<option value="TODOS">Todas as Equipes (Geral)</option>' + optionsHtml;
+    if (selE) selE.innerHTML = optionsHtml;
+    if (selInd) selInd.innerHTML = optionsHtml;
+  }
+
+  function renderInputsGrupos() {
+    var numEl = document.getElementById('num-grupos');
+    if (!numEl) return;
+    var container = document.getElementById('container-inputs-grupos');
+    if (!container) return;
+    
+    numEl.value = appState.grupos.length;
+    var num = parseInt(numEl.value);
+
+    container.innerHTML = '';
+    for (var i = 0; i < num; i++) {
+      var val = escaparHTML((appState.grupos && appState.grupos[i]) || ('Equipe ' + (i+1)));
+      container.innerHTML += '<div class="form-group"><input type="text" value="' + val + '" onchange="atualizarNomeGrupo(' + i + ', this.value)"></div>';
+    }
+  }
+
+  function alterarQuantidadeGrupos() {
+    var num = parseInt(document.getElementById('num-grupos').value);
+    var novos = [];
+    for (var i = 0; i < num; i++) {
+      novos[i] = appState.grupos[i] || ('Equipe ' + (i+1));
+    }
+    appState.grupos = novos;
+    guardarEstado();
+    renderInputsGrupos();
+    updateSelects();
+  }
+
+  function atualizarNomeGrupo(idx, val) {
+    appState.grupos[idx] = val.trim();
+    guardarEstado();
+    updateSelects();
+  }
+
+  function salvarGrupos() { 
+    var numEl = document.getElementById('num-grupos');
+    if (numEl) {
+      var num = parseInt(numEl.value);
+      appState.grupos = appState.grupos.slice(0, num);
+    }
+    guardarEstado(); 
+    alert("Equipes salvas com sucesso!"); 
+  }
+
+  function reiniciarRodada() {
+    if (confirm("Tem certeza que deseja iniciar uma nova rodada? As cartas atuais e decisões das equipes serão resetadas.")) {
+      appState.crises = {};
+      appState.decisoes = {};
+      appState.consultas = {};
+      appState.pontuacoes = {};
+      appState.temposPitchEquipes = {};
+      appState.tempoEsgotadoGlobal = false;
+      guardarEstado();
+      renderMestreDecisoes();
+      renderSorteioMestre();
+      renderMonitorCombateBosses();
+      alert("Nova rodada iniciada com sucesso!");
+    }
+  }
+
+  function limparHistoricoCartasApenas() {
+    if (confirm("Deseja apagar o histórico de cartas sorteadas e reiniciar o orçamento de todas as equipes para 100 pontos?")) {
+      appState.cartasSorteadasPorGrupo = {};
+      appState.crises = {};
+      appState.decisoes = {};
+      appState.consultas = {};
+      appState.penalidadesGrupos = {};
+      appState.pontuacoes = {};
+      appState.temposPitchEquipes = {};
+      guardarEstado();
+      renderSorteioMestre();
+      renderMonitorCombateBosses();
+      alert("Histórico de cartas limpo e orçamentos restaurados para 100 pontos!");
+    }
+  }
+
+  function sortearCartas() {
+    if (!appState.cartasSorteadasPorGrupo) appState.cartasSorteadasPorGrupo = {};
+    var disponiveis = {};
+    var esgotadas = [];
+    appState.grupos.forEach(function(g) {
+      var usadas = appState.cartasSorteadasPorGrupo[g] || [];
+      disponiveis[g] = CARTAS_CRISE.filter(function(c) { return usadas.indexOf(c.id) === -1; });
+      if (!disponiveis[g].length) esgotadas.push(g);
+    });
+    if (esgotadas.length) {
+      alert('Sorteio cancelado: todas as 6 cartas já foram usadas por: ' + esgotadas.join(', ') + '. Use "Limpar Histórico de Cartas Sorteadas" para liberar as cartas novamente.');
+      return;
+    }
+    // Procura uma distribuição sem repetir cartas entre equipes nesta rodada.
+    // O histórico individual nunca é apagado por um novo sorteio ou uma nova rodada.
+    var ordem = appState.grupos.slice().sort(function(a, b) { return disponiveis[a].length - disponiveis[b].length; });
+    var atribuicoes = {};
+    function distribuir(pos, usadasNestaRodada) {
+      if (pos === ordem.length) return true;
+      var grupo = ordem[pos];
+      var candidatas = disponiveis[grupo].slice();
+      for (var i = candidatas.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = candidatas[i]; candidatas[i] = candidatas[j]; candidatas[j] = temp;
+      }
+      for (var k = 0; k < candidatas.length; k++) {
+        var carta = candidatas[k];
+        if (usadasNestaRodada[carta.id]) continue;
+        atribuicoes[grupo] = carta;
+        usadasNestaRodada[carta.id] = true;
+        if (distribuir(pos + 1, usadasNestaRodada)) return true;
+        delete usadasNestaRodada[carta.id];
+        delete atribuicoes[grupo];
+      }
+      return false;
+    }
+    if (!distribuir(0, {})) {
+      alert('Sorteio cancelado: não há combinação de cartas inéditas para todas as equipes nesta rodada. Limpe o histórico de cartas para reiniciar o baralho.');
+      return;
+    }
+    appState.crises = {};
+    appState.decisoes = {};
+    appState.temposPitchEquipes = {};
+    appState.pontuacoes = {};
+    appState.consultas = {};
+    appState.grupos.forEach(function(g) {
+      if (!appState.cartasSorteadasPorGrupo[g]) appState.cartasSorteadasPorGrupo[g] = [];
+      appState.cartasSorteadasPorGrupo[g].push(atribuicoes[g].id);
+      appState.crises[g] = JSON.parse(JSON.stringify(atribuicoes[g]));
+    });
+    guardarEstado();
+    renderSorteioMestre();
+    renderMonitorCombateBosses();
+    alert('Megabosses sorteados! Nenhuma equipe recebeu uma carta já registrada em seu histórico.');
+  }
+
+  function salvarRodadaNoHistorico() {
+    if (!appState.historicoRodadas) appState.historicoRodadas = [];
+    var num = appState.historicoRodadas.length + 1;
+    var dados = { rodada: num, hora: new Date().toLocaleTimeString(), placar: {}, cartasRodada: {}, temposPitch: Object.assign({}, appState.temposPitchEquipes) };
+    appState.grupos.forEach(function(g) {
+      dados.placar[g] = Object.assign({}, appState.pontuacoes[g] || { total: 0 });
+      dados.cartasRodada[g] = appState.crises[g]?.titulo || 'N/A';
+    });
+    appState.historicoRodadas.push(dados);
+    guardarEstado();
+    renderHistoricoTendencias();
+    alert("Rodada " + num + " salva no histórico!");
+  }
+
+  function limparHistoricoRodadas() {
+    if (confirm("Apagar todo o histórico de rodadas?")) {
+      appState.historicoRodadas = [];
+      guardarEstado();
+      renderHistoricoTendencias();
+    }
+  }
+
+  function renderHistoricoTendencias() {
+    var container = document.getElementById('container-historico-tendencias');
+    if (!container) return;
+    var hist = appState.historicoRodadas || [];
+    if (hist.length === 0) { container.innerHTML = '<p class="subtitle">Nenhuma rodada salva.</p>'; return; }
+    
+    var totaisAcumulados = {};
+    appState.grupos.forEach(function(g) { totaisAcumulados[g] = 0; });
+
+    var html = '<table><thead><tr><th>Rodada</th>';
+    appState.grupos.forEach(function(g) { html += '<th>' + g + '</th>'; });
+    html += '</tr></thead><tbody>';
+    
+    hist.forEach(function(h) {
+      html += '<tr><td><strong>Rodada ' + h.rodada + '</strong></td>';
+      appState.grupos.forEach(function(g) {
+        var pts = h.placar[g]?.total || 0;
+        totaisAcumulados[g] += pts;
+        html += '<td><strong>' + pts + ' pts</strong><br><small>' + escaparHTML(h.cartasRodada[g]) + '</small></td>';
+      });
+      html += '</tr>';
+    });
+
+    html += '<tr style="background: rgba(6, 182, 212, 0.15); border-top: 2px solid var(--cyan);">';
+    html += '<td><strong style="color:var(--cyan); font-family:\'Orbitron\'; font-size:0.9rem;">TOTAL ACUMULADO</strong></td>';
+    appState.grupos.forEach(function(g) {
+      html += '<td><strong style="color:var(--cyan); font-size:1.05rem; font-family:\'Orbitron\';">' + totaisAcumulados[g] + ' pts</strong></td>';
+    });
+    html += '</tr>';
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function renderSorteioMestre() {
+    var el = document.getElementById('resultado-sorteio-mestre');
+    if (!el) return;
+    var html = '';
+    appState.grupos.forEach(function(g) {
+      var c = appState.crises && appState.crises[g];
+      if (c && c.titulo) html += '<div style="padding:6px; background:#0b0f19; border:1px solid var(--border-neon); margin-bottom:4px; font-size:0.85rem;"><strong>' + g + ':</strong> ' + c.emoji + ' ' + escaparHTML(c.titulo) + '</div>';
+    });
+    el.innerHTML = html || '<p class="subtitle">Aguardando sorteio...</p>';
+  }
+
+  function renderMonitorCombateBosses() {
+    var container = document.getElementById('container-monitor-bosses');
+    if (!container) return;
+    var html = '';
+    appState.grupos.forEach(function(g) {
+      var c = appState.crises && appState.crises[g];
+      var dec = appState.decisoes && appState.decisoes[g];
+      var statusBadge = '<span class="badge badge-warning">Em Combate</span>';
+      if (dec) {
+        if (dec.resultado === 'vitoria') {
+          statusBadge = '<span class="badge badge-success">Boss Eliminado</span>';
+        } else if (dec.resultado === 'parcial') {
+          statusBadge = '<span class="badge badge-warning">Mitigação Parcial</span>';
+        } else {
+          statusBadge = '<span class="badge badge-danger">Colapso / Sobreviveu</span>';
+        }
+      }
+      
+      html += '<div class="card" style="margin-bottom:0; background:#0b0f19;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+          '<strong style="color:var(--cyan); font-family:\'Orbitron\'; font-size:0.95rem;">' + escaparHTML(g) + '</strong>' +
+          statusBadge +
+        '</div>' +
+        (c && c.titulo ? '<div style="text-align:center; padding:10px; background:#111827; border-radius:8px; border:1px solid var(--border-neon);">' +
+          '<div style="font-size:2.2rem; margin-bottom:4px;">' + c.emoji + '</div>' +
+          '<h4 style="font-size:0.9rem; color:var(--magenta);">' + escaparHTML(c.titulo) + '</h4>' +
+          '<p style="font-size:0.75rem; color:var(--danger); margin-top:2px;">' + escaparHTML(c.ameaca) + '</p>' +
+        '</div>' : '<p class="subtitle" style="margin:0; text-align:center;">Nenhum Megaboss sorteado.</p>') +
+      '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function switchMestreTab(tab) {
+    document.querySelectorAll('.mestre-tab-content').forEach(function(c) { c.style.display = 'none'; });
+    document.querySelectorAll('.nav-tabs .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    var alvoTab = document.getElementById(tab);
+    var alvoBtn = document.getElementById('tab-btn-' + tab);
+    if (alvoTab) alvoTab.style.display = 'block';
+    if (alvoBtn) alvoBtn.classList.add('active');
+  }
+
+  function switchGrupoTab(tab) {
+    document.querySelectorAll('.grupo-tab-pane').forEach(function(p) { p.style.display = 'none'; });
+    document.querySelectorAll('.nav-tabs .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    var alvoPane = document.getElementById('grupo-tab-content-' + tab);
+    var alvoTabBtn = document.getElementById('tab-grupo-' + tab);
+    if (alvoPane) alvoPane.style.display = 'block';
+    if (alvoTabBtn) alvoTabBtn.classList.add('active');
+  }
+
+  function entrarComoGrupo() {
+    var selL = document.getElementById('select-grupo-login');
+    if (!selL) return;
+    var g = selL.value;
+    if (!g) {
+      alert("Por favor, selecione uma equipe.");
+      return;
+    }
+    grupoAtivo = g;
+    localStorage.setItem('cyber_rh_grupo_ativo', grupoAtivo);
+
+    var headerNome = document.getElementById('grupo-header-nome');
+    if (headerNome) headerNome.innerText = 'Painel: ' + grupoAtivo;
+    switchGrupoTab('decisao');
+    mudarTela('screen-grupo');
+    atualizarInterface();
+  }
+
+  function renderPainelGrupo() {
+    var g = grupoAtivo;
+    if (!g) return;
+    
+    var cLista = (appState.consultas && appState.consultas[g]) || [];
+    var baseOrcamento = appState.penalidadesGrupos?.[g] ? 85 : 100;
+    var saldo = Math.max(0, baseOrcamento - (cLista.length * 5));
+    var elSaldo = document.getElementById('display-saldo-orçamento');
+    if (elSaldo) elSaldo.innerText = 'Orçamento: ' + saldo + ' pts ' + (appState.penalidadesGrupos?.[g] ? '(Penalidade -15 pts)' : '');
+
+    var c = appState.crises && appState.crises[g];
+    var container = document.getElementById('container-carta-grupo');
+    var containerConsultores = document.getElementById('container-consultores-grupo');
+    
+    var decisaoJaFeita = appState.decisoes && appState.decisoes[g];
+    var formularioAnterior = window.ultimaEquipeFormulario === g ? capturarFormularioEquipe() : null;
+    window.ultimaEquipeFormulario = g;
+
+    var formCombate = document.getElementById('form-combate-squad');
+    var statusBloqueio = document.getElementById('status-bloqueio-ataque');
+    if (decisaoJaFeita) {
+      if (formCombate) formCombate.style.display = 'none';
+      if (statusBloqueio) statusBloqueio.style.display = 'block';
+    } else {
+      if (formCombate) formCombate.style.display = 'block';
+      if (statusBloqueio) statusBloqueio.style.display = 'none';
+    }
+
+    if (container && c && c.titulo) {
+      container.innerHTML = '<div class="boss-card" id="boss-card-element">' +
+        '<div class="boss-icon">' + c.emoji + '</div>' +
+        '<h4 style="color:var(--magenta);">' + escaparHTML(c.titulo) + '</h4>' +
+        '<p style="font-size:0.8rem; color:var(--danger); margin-top:4px;">' + escaparHTML(c.ameaca) + '</p>' +
+        '<p style="font-size:0.85rem; margin-top:8px; color:var(--text-muted);">' + escaparHTML(c.desc) + '</p>' +
+      '</div>';
+
+      var lbl1 = document.getElementById('lbl-q1');
+      var lbl2 = document.getElementById('lbl-q2');
+      if (lbl1) lbl1.innerText = '1. ' + c.q1;
+      if (lbl2) lbl2.innerText = '2. ' + c.q2;
+
+      if (containerConsultores && c.consultoresPermitidos) {
+        containerConsultores.innerHTML = c.consultoresPermitidos.map(function(esp) {
+          return '<button class="btn btn-sec" onclick="registrarConsultoria(\'' + esp + '\')">Consultar ' + esp + '</button>';
+        }).join('');
+      }
+
+      var opts1El = document.getElementById('opts-q1');
+      var opts2El = document.getElementById('opts-q2');
+
+      if (opts1El) {
+        opts1El.innerHTML = c.opts1.map(function(opt, i) {
+          return '<label class="opt-card"><input type="radio" name="opt_q1_' + g + '" value="' + i + '"><span style="font-size:0.85rem;">' + escaparHTML(opt.texto) + '</span></label>';
+        }).join('');
+      }
+
+      if (opts2El) {
+        opts2El.innerHTML = c.opts2.map(function(opt, i) {
+          return '<label class="opt-card"><input type="radio" name="opt_q2_' + g + '" value="' + i + '"><span style="font-size:0.85rem;">' + escaparHTML(opt.texto) + '</span></label>';
+        }).join('');
+      }
+    } else {
+      if (container) container.innerHTML = '<p class="subtitle">Aguardando sorteio do Mestre...</p>';
+      if (containerConsultores) containerConsultores.innerHTML = '';
+      var opts1El = document.getElementById('opts-q1');
+      var opts2El = document.getElementById('opts-q2');
+      if (opts1El) opts1El.innerHTML = '';
+      if (opts2El) opts2El.innerHTML = '';
+    }
+
+    if (c && c.titulo && !decisaoJaFeita) restaurarFormularioEquipe(formularioAnterior);
+    var histContainer = document.getElementById('historico-consultas-grupo');
+    if (histContainer) {
+      histContainer.innerHTML = cLista.length === 0 ? 'Nenhuma consultoria solicitada.' : cLista.map(function(item, idx) {
+        return '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; background:#0b0f19; padding:4px 8px; border-radius:4px;">' +
+          '<span>• ' + escaparHTML(item.esp) + '</span>' +
+          (item.travado ? '<span style="color:var(--danger); font-size:0.75rem;">🔒 Travado</span>' : '<button class="btn-danger" onclick="estornarConsultoria(' + idx + ')" style="padding:2px 6px; font-size:0.7rem;">Cancelar</button>') +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  function registrarConsultoria(esp) {
+    var g = grupoAtivo;
+    if (!g) return;
+    if (!appState.consultas) appState.consultas = {};
+    if (!appState.consultas[g]) appState.consultas[g] = [];
+    if (!appState.crises[g]) { alert('Aguarde o sorteio da carta.'); return; }
+    if (appState.decisoes && appState.decisoes[g]) { alert('A decisão já foi enviada.'); return; }
+    if (appState.consultas[g].length >= (appState.penalidadesGrupos?.[g] ? 17 : 20)) { alert('Saldo insuficiente.'); return; }
+    appState.consultas[g].push({ esp: esp, hora: new Date().toLocaleTimeString(), travado: false });
+    guardarEstado();
+    renderPainelGrupo();
+    alert('Consultoria com ' + esp + ' registrada (-5 pts).');
+  }
+
+  function estornarConsultoria(index) {
+    var g = grupoAtivo;
+    if (!g || !appState.consultas || !appState.consultas[g]) return;
+    var item = appState.consultas[g][index];
+    if (item && item.travado) {
+      alert("Esta consultoria foi travada pela Banca e não pode ser cancelada.");
+      return;
+    }
+    appState.consultas[g].splice(index, 1);
+    guardarEstado();
+    renderPainelGrupo();
+  }
+
+  function toggleTravaConsultaItem(g, index) {
+    if (!appState.consultas || !appState.consultas[g] || !appState.consultas[g][index]) return;
+    appState.consultas[g][index].travado = !appState.consultas[g][index].travado;
+    guardarEstado();
+    renderAlertaConsultoriasMestre();
+  }
+
+  function enviarDecisaoGrupo() {
+    var g = grupoAtivo;
+    var c = appState.crises && appState.crises[g];
+    if (!g || !c) return;
+    if (appState.decisoes && appState.decisoes[g]) { alert('Decisão já registrada.'); return; }
+
+    var opt1Checked = document.querySelector('input[name="opt_q1_' + g + '"]:checked');
+    var opt2Checked = document.querySelector('input[name="opt_q2_' + g + '"]:checked');
+
+    if (!opt1Checked || !opt2Checked) {
+      alert("Selecione uma opção em cada questão antes de atacar!");
+      return;
+    }
+
+    var opt1 = c.opts1[parseInt(opt1Checked.value)];
+    var opt2 = c.opts2[parseInt(opt2Checked.value)];
+    var decJust = document.getElementById('decisao-justificativa-pitch');
+    var pitchText = decJust ? decJust.value.trim() : '';
+
+    var resultadoCombate = 'colapso';
+    if (opt1.ideal && opt2.ideal) {
+      resultadoCombate = 'vitoria';
+    } else if (opt1.ideal || opt2.ideal) {
+      resultadoCombate = 'parcial';
+    }
+
+    var ptsFund = Math.round((opt1.ptsFund + opt2.ptsFund) / 2);
+    var ptsViab = Math.round((opt1.ptsViab + opt2.ptsViab) / 2);
+    var cLista = (appState.consultas && appState.consultas[g]) || [];
+    
+    var baseOrcamento = appState.penalidadesGrupos?.[g] ? 85 : 100;
+    var ptsSaldo = Math.max(0, Math.round((baseOrcamento - (cLista.length * 5)) / 10));
+
+    var bossElement = document.getElementById('boss-card-element');
+    if (bossElement) {
+      if (resultadoCombate === 'vitoria') bossElement.classList.add('damage-shake');
+      else if (resultadoCombate === 'parcial') bossElement.classList.add('damage-shake-partial');
+      else bossElement.classList.add('damage-shake');
+    }
+
+    setTimeout(function() {
+      if (bossElement) {
+        bossElement.classList.remove('damage-shake');
+        bossElement.classList.remove('damage-shake-partial');
+      }
+
+      if (!appState.decisoes) appState.decisoes = {};
+      appState.decisoes[g] = { q1Texto: opt1.texto, q2Texto: opt2.texto, pitchText: pitchText, resultado: resultadoCombate, eliminado: resultadoCombate === 'vitoria', totalAuto: ptsFund + ptsViab + ptsSaldo };
+
+      if (!appState.historicoDecisoesGrupos) appState.historicoDecisoesGrupos = {};
+      if (!appState.historicoDecisoesGrupos[g]) appState.historicoDecisoesGrupos[g] = [];
+      appState.historicoDecisoesGrupos[g].push({ cartaTitulo: c.titulo, q1Texto: opt1.texto, q2Texto: opt2.texto, pitchText: pitchText, resultado: resultadoCombate });
+
+      if (!appState.penalidadesGrupos) appState.penalidadesGrupos = {};
+      
+      var bonusBoss = 0;
+      if (resultadoCombate === 'vitoria') {
+        bonusBoss = 20; 
+        appState.penalidadesGrupos[g] = false;
+      } else if (resultadoCombate === 'parcial') {
+        bonusBoss = 10; 
+        appState.penalidadesGrupos[g] = false;
+      } else {
+        bonusBoss = -15; 
+        appState.penalidadesGrupos[g] = true; 
+      }
+
+      if (!appState.pontuacoes) appState.pontuacoes = {};
+      var base = { fund: ptsFund, viab: ptsViab, saldo: ptsSaldo, qualidadeBanca: 15, bonusBoss: bonusBoss };
+      var calculada = pontuacaoCalculada(base, 15, 0);
+      appState.pontuacoes[g] = Object.assign({}, base, { pitch: calculada.pitch, total: calculada.total });
+
+      guardarEstado();
+      atualizarInterface();
+
+      if (resultadoCombate === 'vitoria') {
+        var modalV = document.getElementById('modal-vitoria');
+        if (modalV) modalV.classList.add('active');
+      } else if (resultadoCombate === 'parcial') {
+        var modalP = document.getElementById('modal-parcial');
+        if (modalP) modalP.classList.add('active');
+      } else {
+        var modalD = document.getElementById('modal-derrota');
+        if (modalD) modalD.classList.add('active');
+      }
+    }, 600);
+  }
+
+  function renderHistoricoPessoalGrupo() {
+    var g = grupoAtivo;
+    var container = document.getElementById('container-historico-pessoal-grupo');
+    if (!container || !g) return;
+    var hist = (appState.historicoDecisoesGrupos && appState.historicoDecisoesGrupos[g]) || [];
+    container.innerHTML = hist.length === 0 ? '<p class="subtitle">Nenhuma decisão submetida ainda.</p>' : hist.map(function(h, idx) {
+      return '<div style="background:#0b0f19; border:1px solid var(--border-neon); padding:12px; border-radius:8px; margin-bottom:10px; position:relative;">' +
+        '<button class="btn-danger" onclick="excluirItemHistoricoGrupo(' + idx + ')" style="position:absolute; top:12px; right:12px; padding:4px 8px; font-size:0.75rem;">🗑️ Excluir</button>' +
+        '<p style="color:var(--cyan); font-weight:700; padding-right:60px;">📄 ' + escaparHTML(h.cartaTitulo) + '</p>' +
+        '<p style="font-size:0.85rem; margin-top:6px;"><strong>1. Decisão:</strong> ' + escaparHTML(h.q1Texto) + '</p>' +
+        '<p style="font-size:0.85rem;"><strong>2. Estrutura:</strong> ' + escaparHTML(h.q2Texto) + '</p>' +
+        '<p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;"><strong>Síntese Pitch:</strong> ' + escaparHTML(h.pitchText) + '</p>' +
+      '</div>';
+    }).join('');
+  }
+
+  function excluirItemHistoricoGrupo(idx) {
+    var g = grupoAtivo;
+    if (!g || !appState.historicoDecisoesGrupos || !appState.historicoDecisoesGrupos[g]) return;
+    if (confirm("Deseja realmente excluir este registo do seu histórico?")) {
+      appState.historicoDecisoesGrupos[g].splice(idx, 1);
+      guardarEstado();
+      renderHistoricoPessoalGrupo();
+    }
+  }
+
+  function renderMestreDecisoes() {
+    var container = document.getElementById('container-mestre-decisoes-detalhadas');
+    if (!container) return;
+    var html = '';
+    appState.grupos.forEach(function(g) {
+      var d = appState.decisoes && appState.decisoes[g];
+      if (d) {
+        var status = '<span class="badge badge-danger">Sobreviveu (-15 Penalidade)</span>';
+        if (d.resultado === 'vitoria') status = '<span class="badge badge-success">Boss Eliminado (+20 Pitch)</span>';
+        else if (d.resultado === 'parcial') status = '<span class="badge badge-warning">Mitigação Parcial (+10 Pitch)</span>';
+
+        html += '<div style="background:#0b0f19; border:1px solid var(--border-neon); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.85rem;">' +
+          '<div style="display:flex; justify-content:space-between;"><strong>' + escaparHTML(g) + '</strong> ' + status + '</div>' +
+          '<p style="margin-top:4px;"><strong>Decisão:</strong> ' + escaparHTML(d.q1Texto) + '</p>' +
+          '<p><strong>Pitch:</strong> ' + escaparHTML(d.pitchText) + '</p>' +
+        '</div>';
+      }
+    });
+    container.innerHTML = html || '<p class="subtitle">Aguardando decisões das equipes...</p>';
+  }
+
+  function renderAlertaConsultoriasMestre() {
+    var box = document.getElementById('alerta-consultoria-mestre');
+    var lista = document.getElementById('lista-alertas-consultoria');
+    if (!box || !lista) return;
+    var html = '';
+    var total = 0;
+    appState.grupos.forEach(function(g) {
+      var cList = appState.consultas?.[g] || [];
+      if (cList.length > 0) {
+        total++;
+        html += '<div style="background:#0b0f19; padding:8px; border-radius:6px; margin-bottom:6px;"><strong>' + g + ':</strong><br>';
+        cList.forEach(function(item, index) {
+          var travado = item.travado;
+          var estiloBtn = travado ? "background:var(--danger); color:white;" : "background:var(--success); color:white;";
+          var textoBtn = travado ? "🔒 Travado (Estorno Bloqueado)" : "🔓 Destravado (Estorno Permitido)";
+          html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; gap:8px;">' +
+            '<span>• ' + escaparHTML(item.esp) + ' (' + escaparHTML(item.hora) + ')</span>' +
+            '<button class="btn" style="font-size:0.65rem; padding:4px 8px; ' + estiloBtn + '" onclick="toggleTravaConsultaItem(' + JSON.stringify(g).replace(/&/g,'&amp;').replace(/"/g,'&quot;') + ', ' + index + ')">' + textoBtn + '</button>' +
+          '</div>';
+        });
+        html += '</div>';
+      }
+    });
+    if (total > 0) {
+      lista.innerHTML = html;
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  function enviarMensagemMestre() {
+    var destEl = document.getElementById('select-destinatario-msg');
+    var txtEl = document.getElementById('texto-msg');
+    if (!destEl || !txtEl) return;
+    var dest = destEl.value;
+    var txt = txtEl.value.trim();
+    if (!txt) return;
+    if (!appState.mensagens) appState.mensagens = [];
+    appState.mensagens.push({ dest: dest, texto: txt, hora: new Date().toLocaleTimeString() });
+    guardarEstado();
+    txtEl.value = '';
+    renderGerenciarMensagensMestre();
+    alert("Comunicado enviado!");
+  }
+
+  function renderGerenciarMensagensMestre() {
+    var container = document.getElementById('container-gerenciar-mensagens-mestre');
+    if (!container) return;
+    container.innerHTML = (appState.mensagens || []).length === 0 ? '<p class="subtitle">Nenhum comunicado enviado.</p>' : appState.mensagens.map(function(m, idx) {
+      return '<div style="background:#0b0f19; padding:8px; border:1px solid var(--border-neon); margin-bottom:4px; font-size:0.85rem; display:flex; justify-content:space-between;">' +
+        '<span><strong>' + escaparHTML(m.dest) + ':</strong> ' + escaparHTML(m.texto) + '</span><button class="btn-danger" onclick="excluirMensagem(' + idx + ')">Excluir</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function excluirMensagem(idx) {
+    if (!appState.mensagens) return;
+    appState.mensagens.splice(idx, 1);
+    guardarEstado();
+    renderGerenciarMensagensMestre();
+  }
+
+  function renderOrientacoes() {
+    var g = grupoAtivo;
+    var container = document.getElementById('container-orientacoes-tempo-real');
+    if (!container) return;
+    var msgs = (appState.mensagens || []).filter(function(m) { return m.dest === 'TODOS' || m.dest === g; });
+    container.innerHTML = msgs.length ? msgs.map(function(m) {
+      return '<div style="background:#0b0f19; border-left:4px solid var(--cyan); padding:8px 12px; margin-bottom:6px; font-size:0.85rem;">' +
+        '<small style="color:var(--cyan);">' + (m.dest === 'TODOS' ? '📢 Geral' : '🔒 Exclusivo') + '</small> - ' + escaparHTML(m.texto) +
+      '</div>';
+    }).join('') : '<p class="subtitle">Nenhum comunicado ativo.</p>';
+  }
+
+  var timerMaster, masterTime = 600;
+  function setMasterTimerStage() {
+    var stageSel = document.getElementById('stage-timer-select');
+    if (!stageSel) return;
+    masterTime = parseInt(stageSel.value);
+    pauseMasterTimer();
+    updateTimerDisplay();
+  }
+  function updateTimerDisplay() {
+    var m = Math.floor(masterTime / 60), s = masterTime % 60;
+    var el = document.getElementById('display-master-timer');
+    if (el) el.innerText = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function startMasterTimer() {
+    if (!timerMaster) {
+      timerMaster = setInterval(function() { if (masterTime > 0) { masterTime--; updateTimerDisplay(); } if (masterTime <= 0) pauseMasterTimer(); }, 1000);
+    }
+  }
+  function pauseMasterTimer() { clearInterval(timerMaster); timerMaster = null; }
+  function resetMasterTimer() { pauseMasterTimer(); masterTime = 0; updateTimerDisplay(); }
+
+  var timerGroup = null, segundosGastosAtual = 0;
+  function formatarTempoMMSS(s) {
+    var m = Math.floor(s/60), sec = s%60;
+    return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+  function mudarGrupoPitch() {
+    if (timerGroup) { clearInterval(timerGroup); timerGroup = null; }
+    var sel = document.getElementById('select-grupo-timer-individual');
+    segundosGastosAtual = limitar(sel && appState.temposPitchEquipes?.[sel.value] || 0,0,300);
+    atualizarTempoPitchVisual();
+  }
+  function startGroupTimer() {
+    if (!timerGroup) {
+      timerGroup = setInterval(function() {
+        if (segundosGastosAtual < 300) {
+          segundosGastosAtual++;
+          var el = document.getElementById('display-group-timer');
+          if (el) el.innerText = formatarTempoMMSS(300 - segundosGastosAtual);
+        }
+        if (segundosGastosAtual >= 300) { clearInterval(timerGroup); timerGroup = null; }
+      }, 1000);
+    }
+  }
+  function pausarEfetuarRegistroPitch() {
+    if (timerGroup) { clearInterval(timerGroup); timerGroup = null; }
+    var selInd = document.getElementById('select-grupo-timer-individual');
+    if (!selInd) return;
+    var grupoSel = selInd.value;
+    if (!appState.temposPitchEquipes) appState.temposPitchEquipes = {};
+    appState.temposPitchEquipes[grupoSel] = segundosGastosAtual;
+    guardarEstado();
+    alert('Tempo guardado para ' + grupoSel + '!');
+  }
+  function resetGroupTimer() {
+    if (timerGroup) { clearInterval(timerGroup); timerGroup = null; }
+    segundosGastosAtual = 0;
+    var el = document.getElementById('display-group-timer');
+    if (el) el.innerText = "05:00";
+  }
+
+  function carregarPontuacaoGrupo() {
+    var selEval = document.getElementById('select-grupo-eval');
+    if (!selEval) return;
+    var g = selEval.value;
+    var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 15, saldo: 10, bonusBoss: 0 };
+    var pilarEl = document.getElementById('pilar-pitch-qualidade');
+    if (pilarEl) pilarEl.value = p.qualidadeBanca == null ? 15 : p.qualidadeBanca;
+    calcMediaRanking();
+  }
+
+  function calcMediaRanking() {
+    var selEval = document.getElementById('select-grupo-eval');
+    if (!selEval) return { pitchFinal: 15, total: 15 };
+    var g = selEval.value;
+    var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 15, saldo: 10, bonusBoss: 0 };
+    var pilarEl = document.getElementById('pilar-pitch-qualidade');
+    var qualidadeBanca = pilarEl ? limitar(pilarEl.value, 0, 20) : 15;
+    var tempoGasto = appState.temposPitchEquipes?.[g] || 0;
+    var calculada = pontuacaoCalculada(p, qualidadeBanca, tempoGasto);
+    var bonusTempo = calculada.bonusTempo;
+    var bonusBoss = calculada.bonusBoss;
+    var pitchFinal = calculada.pitch;
+    var displayPitch = document.getElementById('display-nota-pitch-final');
+    var infoTempo = document.getElementById('info-tempo-pitch-calc');
+    var infoBonusVel = document.getElementById('info-bonus-velocidade');
+    var infoBonusBoss = document.getElementById('info-bonus-boss');
+    var displayTotal = document.getElementById('display-nota-final');
+
+    if (displayPitch) displayPitch.innerText = pitchFinal;
+    if (infoTempo) infoTempo.innerText = tempoGasto > 0 ? formatarTempoMMSS(tempoGasto) : 'Não cronometrado';
+    if (infoBonusVel) infoBonusVel.innerText = '+' + bonusTempo + ' pts';
+    if (infoBonusBoss) {
+      infoBonusBoss.innerText = (bonusBoss >= 0 ? '+' : '') + bonusBoss + ' pts';
+      infoBonusBoss.style.color = bonusBoss >= 0 ? 'var(--success)' : 'var(--danger)';
+    }
+
+    var total = calculada.total;
+    if (displayTotal) displayTotal.innerText = total;
+    return { pitchFinal: pitchFinal, total: total };
+  }
+
+  function salvarPontuacaoGrupo() {
+    var selEval = document.getElementById('select-grupo-eval');
+    if (!selEval) return;
+    var g = selEval.value;
+    var res = calcMediaRanking();
+    if (!appState.pontuacoes) appState.pontuacoes = {};
+    var atual = appState.pontuacoes[g] || { fund: 0, viab: 0, saldo: 10, bonusBoss: 0 };
+    appState.pontuacoes[g] = Object.assign({}, atual, { qualidadeBanca: limitar(document.getElementById('pilar-pitch-qualidade').value,0,20), pitch: res.pitchFinal, total: res.total });
+    guardarEstado();
+    renderRanking();
+    alert('Nota salva para ' + g + '!');
+  }
+
+  function renderRanking() {
+    var tbody = document.getElementById('tbody-ranking');
+    if (!tbody) return;
+    var lista = appState.grupos.map(function(g) {
+      var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 0, saldo: 0, total: 0 };
+      return { grupo: g, auto: p.fund + p.viab + p.saldo, pitch: p.pitch, total: p.total };
+    });
+    lista.sort(function(a,b) { return b.total - a.total; });
+    tbody.innerHTML = lista.map(function(item, idx) {
+      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.auto + ' pts</td><td>' + item.pitch + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' pts</strong></td></tr>';
+    }).join('');
+  }
+
+  function atualizarInterface() {
+    var selecoes = {};
+    ['select-grupo-login','select-destinatario-msg','select-grupo-eval','select-grupo-timer-individual'].forEach(function(id) { var e=document.getElementById(id); if(e) selecoes[id]=e.value; });
+    updateSelects();
+    Object.keys(selecoes).forEach(function(id) { var e=document.getElementById(id); if(e && Array.from(e.options).some(function(o){return o.value===selecoes[id];})) e.value=selecoes[id]; });
+    if (document.activeElement && document.activeElement.closest && !document.activeElement.closest('#container-inputs-grupos')) renderInputsGrupos();
+    var active = document.querySelector('.screen.active');
+    if (active) {
+      if (active.id === 'screen-mestre') {
+        renderSorteioMestre();
+        renderMonitorCombateBosses();
+        renderMestreDecisoes();
+        renderAlertaConsultoriasMestre();
+        renderGerenciarMensagensMestre();
+        renderRanking();
+        renderHistoricoTendencias();
+      } else if (active.id === 'screen-grupo') {
+        if (grupoAtivo) {
+          var headerNome = document.getElementById('grupo-header-nome');
+          if (headerNome) headerNome.innerText = 'Painel: ' + grupoAtivo;
+          renderPainelGrupo();
+          renderHistoricoPessoalGrupo();
+          renderOrientacoes();
+        }
+      }
+    }
+  }
+
+  function diferencasEstado(anterior, atual, caminho, saida) {
+    if (JSON.stringify(anterior) === JSON.stringify(atual)) return;
+    if (atual && typeof atual === 'object' && !Array.isArray(atual) && anterior && typeof anterior === 'object' && !Array.isArray(anterior)) {
+      new Set(Object.keys(anterior).concat(Object.keys(atual))).forEach(function(k) {
+        diferencasEstado(anterior[k], atual[k], caminho.concat(k), saida);
+      });
+    } else if (caminho.length) {
+      saida[caminho.join('/')] = atual === undefined ? null : atual;
+    }
+  }
+  function guardarEstado() {
+    if (!sincronizacaoPronta || !window.rtdbUpdate || !window.db) return;
+    var alteracoes = {};
+    diferencasEstado(snapshotBase || {}, appState, [], alteracoes);
+    if (!Object.keys(alteracoes).length) return;
+    var baseRef = window.rtdbRef(window.db, 'rh_na_real_v11_fix/estado_jogo');
+    // Atualizações por caminho evitam sobrescrever decisões de outras equipes.
+    window.rtdbUpdate(baseRef, alteracoes).catch(function(e) { console.error('Falha na sincronização:',e); alert('Não foi possível sincronizar a alteração. Verifique sua conexão e permissões.'); });
+    snapshotBase = JSON.parse(JSON.stringify(appState));
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    atualizarInterface();
+  });
+</script>
+
+<!-- SINCRONIZAÇÃO EM TEMPO REAL VIA FIREBASE REALTIME DATABASE -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+  import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAkzK08rwDpigza4KylOE-Qty2XwD2modg",
+    authDomain: "rpg-gp-5.firebaseapp.com",
+    databaseURL: "https://rpg-gp-5-default-rtdb.firebaseio.com",
+    projectId: "rpg-gp-5",
+    storageBucket: "rpg-gp-5.firebasestorage.app",
+    messagingSenderId: "296654029932",
+    appId: "1:296654029932:web:3288d89ff8c8c0b0740449",
+    measurementId: "G-PZFXQ5QFEZ"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.db = db;
+    window.rtdbRef = ref;
+    window.rtdbUpdate = update;
+    window.rtdbOnValue = onValue;
+
+    const estadoRef = ref(db, 'rh_na_real_v11_fix/estado_jogo');
+    onValue(estadoRef, (snapshot) => {
+      const dados = snapshot.val();
+      if (dados) {
+        appState = dados;
+        if (!Array.isArray(appState.mensagens)) appState.mensagens = [];
+        if (!appState.consultas) appState.consultas = {};
+        if (!appState.crises) appState.crises = {};
+        if (!appState.decisoes) appState.decisoes = {};
+        if (!appState.penalidadesGrupos) appState.penalidadesGrupos = {};
+        if (!Array.isArray(appState.historicoRodadas)) appState.historicoRodadas = [];
+        if (!appState.cartasSorteadasPorGrupo) appState.cartasSorteadasPorGrupo = {};
+        if (!appState.historicoDecisoesGrupos) appState.historicoDecisoesGrupos = {};
+        if (!appState.temposPitchEquipes) appState.temposPitchEquipes = {};
+        
+        snapshotBase = JSON.parse(JSON.stringify(appState));
+        sincronizacaoPronta = true;
+        if (typeof atualizarInterface === 'function') atualizarInterface();
+      } else {
+        snapshotBase = {}; sincronizacaoPronta = true; guardarEstado();
+      }
+    });
+  } catch (err) {
+    console.warn("Erro ao ligar ao Firebase - mantendo estado local:", err);
+  }
+</script>
+</body>
+</html>
