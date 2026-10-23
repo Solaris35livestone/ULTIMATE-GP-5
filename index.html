@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CYBER RH: OVERDRIVE BOSS BATTLES</title>
+  <title>CYBER RH: OVERDRIVE</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -42,6 +42,22 @@
 
     .title { font-size: 1.3rem; font-weight: 700; color: var(--cyan); margin-bottom: 4px; text-shadow: 0 0 10px var(--cyan-glow); }
     .subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 14px; }
+
+
+    /* Cartões de acompanhamento: identidade visual do antigo monitor, com detalhes das decisões. */
+    .decisoes-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:14px; }
+    .decisao-monitor-card { background:#0b0f19; border:1px solid var(--border-neon); border-radius:12px; padding:15px; min-width:0; }
+    .decisao-monitor-top { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    .decisao-monitor-equipe { color:var(--cyan); font-family:'Orbitron',sans-serif; font-size:.9rem; }
+    .decisao-monitor-crise { display:flex; gap:12px; align-items:center; padding:12px; background:#111827; border:1px solid var(--border-neon); border-radius:9px; }
+    .decisao-monitor-crise strong { display:block; color:var(--magenta); font-size:.88rem; }
+    .decisao-monitor-crise p { font-size:.8rem; color:var(--text-muted); margin-top:4px; }
+    .decisao-monitor-emoji { font-size:2.2rem; flex-shrink:0; }
+    .decisao-monitor-detalhes { margin-top:12px; display:grid; gap:9px; }
+    .decisao-monitor-detalhes p { overflow-wrap:anywhere; font-size:.88rem; line-height:1.45; }
+    .decisao-monitor-detalhes p strong { display:block; color:var(--cyan); margin-bottom:3px; }
+    .decisao-monitor-detalhes .badge { justify-self:start; }
+    .decisao-monitor-vazio { color:var(--text-muted); margin-top:12px; font-size:.9rem; }
 
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
     .form-group { margin-bottom: 14px; }
@@ -142,10 +158,10 @@
       <h2 style="color:var(--success); font-size:1.5rem; margin-bottom:8px;">MEGABOSS ELIMINADO!</h2>
       <p style="font-size:1rem; margin-bottom:14px; color:var(--text-main);">Sua estratégia tática e estrutural desmantelou completamente a crise corporativa!</p>
       <div style="background:#0b0f19; padding:12px; border-radius:8px; border:1px solid var(--success); margin-bottom:16px;">
-        <p style="color:var(--success); font-weight:700;">+20 PTS DE BÔNUS NO PITCH DE MITIGAÇÃO</p>
+        <p style="color:var(--success); font-weight:700;">+10 PONTOS NO ORÇAMENTO DE RH</p>
         <small style="color:var(--text-muted);">A crise foi completamente mitigada antes do colapso.</small>
       </div>
-      <button class="btn" style="background:var(--success); color:#000; width:100%;" onclick="fecharModal('modal-vitoria')">Acessar Resumo do Pitch</button>
+      <button class="btn" style="background:var(--success); color:#000; width:100%;" onclick="fecharModal('modal-vitoria')">Consultar Resumo das Decisões</button>
     </div>
   </div>
 
@@ -156,10 +172,10 @@
       <h2 style="color:var(--yellow); font-size:1.5rem; margin-bottom:8px;">MITIGAÇÃO PARCIAL!</h2>
       <p style="font-size:1rem; margin-bottom:14px; color:var(--text-main);">Sua equipe acertou parte da estratégia, contendo os danos diretos do Megaboss!</p>
       <div style="background:#0b0f19; padding:12px; border-radius:8px; border:1px solid var(--yellow); margin-bottom:16px;">
-        <p style="color:var(--yellow); font-weight:700;">+10 PTS DE BÔNUS NO PITCH</p>
+        <p style="color:var(--yellow); font-weight:700;">+5 PONTOS NO ORÇAMENTO DE RH</p>
         <small style="color:var(--text-muted);">A crise foi controlada, mas exige ajustes no plano para evitar efeitos colaterais.</small>
       </div>
-      <button class="btn" style="background:var(--yellow); color:#000; width:100%;" onclick="fecharModal('modal-parcial')">Acessar Resumo do Pitch</button>
+      <button class="btn" style="background:var(--yellow); color:#000; width:100%;" onclick="fecharModal('modal-parcial')">Consultar Resumo das Decisões</button>
     </div>
   </div>
 
@@ -171,16 +187,15 @@
       <p style="font-size:0.95rem; margin-bottom:14px; color:var(--text-main);">O Megaboss sobreviveu ao ataque. Suas decisões geraram passivos e insatisfação no setor.</p>
       <div style="background:#0b0f19; padding:12px; border-radius:8px; border:1px solid var(--danger); margin-bottom:16px; text-align:left;">
         <p style="color:var(--danger); font-weight:700;">⚠️ Efeitos do Colapso:</p>
-        <p style="font-size:0.85rem; color:var(--text-muted);">• Penalidade de -15 pts no Orçamento da próxima rodada.<br>• Defesa obrigatória de emergência no Pitch da Banca.</p>
+        <p style="font-size:0.85rem; color:var(--text-muted);">• Penalidade imediata de -15 pts no orçamento acumulado, além do custo operacional de -10.<br>• A equipe deverá explicar à banca como corrigiria os impactos da crise.</p>
       </div>
-      <button class="btn" style="background:var(--danger); color:#fff; width:100%;" onclick="fecharModal('modal-derrota')">Preparar Defesa do Pitch</button>
+      <button class="btn" style="background:var(--danger); color:#fff; width:100%;" onclick="fecharModal('modal-derrota')">Consultar Resumo das Decisões</button>
     </div>
   </div>
 
   <!-- TELA INICIAL -->
   <div id="screen-home" class="screen active card" style="text-align:center; padding:40px 20px;">
     <h1 class="title" style="font-size:2.2rem; margin-bottom:10px;">CYBER RH: OVERDRIVE</h1>
-    <p class="subtitle" style="font-size:1.1rem; max-width:600px; margin:0 auto 24px auto;">RPG de Gestão de Pessoas &amp; Batalhas contra Megabosses Corporativos (UFAM)</p>
     <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
       <button class="btn" style="padding:16px 32px; font-size:1rem;" onclick="tentarEntrarMestre()">Mesa do Game Master / Banca</button>
       <button class="btn btn-sec" style="padding:16px 32px; font-size:1rem;" onclick="mudarTela('screen-grupo-login')">Entrada das Equipes</button>
@@ -203,18 +218,16 @@
     <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <div>
         <h2 class="title">Mesa do Mestre / Banca RH</h2>
-        <p class="subtitle" style="margin:0;">Mediação Técnica e Avaliação da Partida</p>
       </div>
       <button class="btn btn-sec" onclick="mudarTela('screen-home')">Sair</button>
     </div>
 
     <div class="nav-tabs">
       <button id="tab-btn-mestre-setup" class="tab-btn active" onclick="switchMestreTab('mestre-setup')">1. Sorteio &amp; Rodada</button>
-      <button id="tab-btn-mestre-combate" class="tab-btn" onclick="switchMestreTab('mestre-combate')">2. Luta Bosses</button>
-      <button id="tab-btn-mestre-decisoes" class="tab-btn" onclick="switchMestreTab('mestre-decisoes')">3. Decisões &amp; Alertas</button>
-      <button id="tab-btn-mestre-comunicados" class="tab-btn" onclick="switchMestreTab('mestre-comunicados')">4. Comunicados</button>
-      <button id="tab-btn-mestre-timer" class="tab-btn" onclick="switchMestreTab('mestre-timer')">5. Tempo</button>
-      <button id="tab-btn-mestre-ranking" class="tab-btn" onclick="switchMestreTab('mestre-ranking')">6. Placar Final &amp; Análise</button>
+      <button id="tab-btn-mestre-decisoes" class="tab-btn" onclick="switchMestreTab('mestre-decisoes')">2. Decisões &amp; Alertas</button>
+      <button id="tab-btn-mestre-comunicados" class="tab-btn" onclick="switchMestreTab('mestre-comunicados')">3. Comunicados</button>
+      <button id="tab-btn-mestre-timer" class="tab-btn" onclick="switchMestreTab('mestre-timer')">4. Tempo</button>
+      <button id="tab-btn-mestre-ranking" class="tab-btn" onclick="switchMestreTab('mestre-ranking')">5. Placar Final &amp; Análise</button>
     </div>
 
     <!-- TAB 1: CADASTRO E SORTEIO -->
@@ -246,15 +259,6 @@
       </div>
     </div>
 
-    <!-- TAB 2: LUTA BOSSES -->
-    <div id="mestre-combate" class="mestre-tab-content" style="display:none;">
-      <div class="card">
-        <h3 class="title" style="font-size:1.1rem;">⚔️ Monitor de Combate contra Megabosses</h3>
-        <p class="subtitle">Acompanhe em tempo real o enfrentamento das equipes e o estado das crises corporativas.</p>
-        <div id="container-monitor-bosses" class="grid" style="margin-top:14px;"></div>
-      </div>
-    </div>
-
     <!-- TAB 3: DECISÕES E ALERTAS DE CONSULTORIA -->
     <div id="mestre-decisoes" class="mestre-tab-content" style="display:none;">
       <div id="alerta-consultoria-mestre" style="display:none;" class="card" style="border-left: 6px solid var(--danger); background:#1e1114; margin-bottom:14px;">
@@ -263,8 +267,8 @@
       </div>
 
       <div class="card">
-        <h3 class="title" style="font-size:1.1rem;">Decisões &amp; Avaliação em Tempo Real</h3>
-        <div id="container-mestre-decisoes-detalhadas" style="margin-top:10px;"></div>
+        <h3 class="title" style="font-size:1.1rem;">Decisões das Equipes</h3>
+        <div id="container-mestre-decisoes-detalhadas" class="decisoes-grid" style="margin-top:12px;"></div>
       </div>
     </div>
 
@@ -314,20 +318,6 @@
           </div>
         </div>
 
-        <div class="card">
-          <h3 class="title" style="font-size:1.1rem;">⏱️ Cronômetro de Pitch</h3>
-          <div class="form-group">
-            <label for="select-grupo-timer-individual">Selecione a Equipe:</label>
-            <select id="select-grupo-timer-individual" onchange="mudarGrupoPitch()"></select>
-          </div>
-          <div class="timer" id="display-group-timer" style="color: var(--success);">05:00</div>
-          <div class="btn-group" style="justify-content:center;">
-            <button class="btn" style="background:var(--success); color:#000;" onclick="startGroupTimer()">Iniciar Pitch</button>
-            <button class="btn btn-sec" onclick="pausarEfetuarRegistroPitch()">Pausar &amp; Salvar</button>
-            <button class="btn btn-sec" onclick="resetGroupTimer()">Resetar</button>
-          </div>
-          <div id="status-tempo-equipe-atual" style="margin-top:10px; font-size:0.85rem; font-weight:700; text-align:center;"></div>
-        </div>
       </div>
     </div>
 
@@ -335,27 +325,25 @@
     <div id="mestre-ranking" class="mestre-tab-content" style="display:none;">
       <div class="grid">
         <div class="card">
-          <h3 class="title" style="font-size:1.1rem;">Nota do Pitch</h3>
+          <h3 class="title" style="font-size:1.1rem;">Nota do Pitch</h3><p style="font-size:.8rem;color:var(--text-muted);">Pitch: 0 a 20, exclusivo do Mestre, sem bônus automáticos. Boss: vitória +10, parcial +5, colapso -15 no orçamento acumulado (máximo 120). Orçamento inicial: 100; custo operacional: -10 por rodada/equipe, cobrado na submissão. Nota de recursos (0–10) reflete o saldo após todos os efeitos. Seis rodadas, máximo de 600 pontos acumulados.</p>
           <div class="form-group">
             <label for="select-grupo-eval">Equipe:</label>
             <select id="select-grupo-eval" onchange="carregarPontuacaoGrupo()"></select>
           </div>
           <div class="form-group">
             <label>Qualidade do Pitch pela Banca:</label>
-            <input type="number" id="pilar-pitch-qualidade" min="0" max="20" value="15" oninput="calcMediaRanking()">
+            <input type="number" id="pilar-pitch-qualidade" min="0" max="20" value="0" oninput="calcMediaRanking()">
           </div>
           <div style="background:#0b0f19; padding:10px; border-radius:8px; border:1px solid var(--border-neon); font-size:0.85rem; margin-bottom:12px;">
-            <p><strong>Tempo no pitch:</strong> <span id="info-tempo-pitch-calc" style="color:var(--cyan);">Não registrado</span></p>
-            <p><strong>Bônus de Velocidade:</strong> <span id="info-bonus-velocidade">0 pts</span></p>
-            <p><strong>Bônus/Penalidade do Boss:</strong> <span id="info-bonus-boss" style="font-weight:700;">0 pts</span></p>
-            <p style="margin-top:4px; font-weight:700; color:var(--success);">Nota Final do Pitch: <span id="display-nota-pitch-final">15</span> / 20 pts</p>
+            <p><strong>Impacto no orçamento (Boss):</strong> <span id="info-bonus-boss" style="font-weight:700;">0 pts</span></p>
+            <p style="margin-top:4px; font-weight:700; color:var(--success);">Nota Final do Pitch: <span id="display-nota-pitch-final">0</span> / 20 pts</p>
           </div>
           <p style="text-align:center; font-weight:700; margin:10px 0;">Total Geral: <span id="display-nota-final" style="color:var(--cyan);">0</span> / 100 pts</p>
           <button class="btn" style="width:100%;" onclick="salvarPontuacaoGrupo()">Salvar Nota do Pitch</button>
         </div>
 
         <div class="card">
-          <h3 class="title" style="font-size:1.1rem;">Placar Geral Automático</h3>
+          <h3 class="title" style="font-size:1.1rem;">Ranking Acumulado (até 600 pontos)</h3>
           <table>
             <thead>
               <tr><th>Pos.</th><th>Equipe</th><th>Automática</th><th>Pitch</th><th>Total</th></tr>
@@ -472,10 +460,7 @@
   var SENHA_MESTRE = "rh2026";
   function escaparHTML(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function limitar(n, minimo, maximo) { n = Number(n); return Number.isFinite(n) ? Math.min(maximo, Math.max(minimo,n)) : minimo; }
-  function atualizarTempoPitchVisual() {
-    var el = document.getElementById('display-group-timer');
-    if (el) el.innerText = formatarTempoMMSS(Math.max(0, 300 - segundosGastosAtual));
-  }
+
   var snapshotBase = null;
   var sincronizacaoPronta = false;
   var alteracoesPendentes = [];
@@ -492,15 +477,27 @@
     if (a) a.checked = true; if (b) b.checked = true;
     var t = document.getElementById('decisao-justificativa-pitch'); if (t) t.value = d.t;
   }
-  function pontuacaoCalculada(p, qualidade, tempo) {
+  // Pitch e exclusivo do Mestre; os resultados do Boss afetam somente o orcamento.
+  function pontuacaoCalculada(p, qualidade) {
     p = p || {};
-    var bonusTempo = tempo > 0 && tempo <= 180 ? 2 : (tempo > 180 && tempo <= 270 ? 1 : 0);
-    var bonusBoss = Number(p.bonusBoss) || 0;
-    var notaBanca = limitar(qualidade,0,20);
-    var pitch = limitar(notaBanca + bonusTempo + Math.max(0,bonusBoss),0,20);
+    var pitch = p.pitchAvaliado ? limitar(qualidade,0,20) : 0;
     var automatico = limitar(p.fund,0,40) + limitar(p.viab,0,30) + limitar(p.saldo,0,10);
-    // Penalidade de colapso afeta o orçamento da próxima rodada, não a nota do pitch atual.
-    return {pitch:pitch,total:limitar(automatico + pitch,0,100),bonusTempo:bonusTempo,bonusBoss:bonusBoss};
+    return {pitch:pitch,total:limitar(automatico + pitch,0,100)};
+  }
+  function orcamentoAtual(g) {
+    if (!appState.orcamentosGrupos) appState.orcamentosGrupos = {};
+    var valor = appState.orcamentosGrupos[g];
+    return valor == null ? 100 : limitar(Number(valor),0,120);
+  }
+  function orcamentoDisponivel(g) {
+    var c = (appState.consultas && appState.consultas[g]) || [];
+    var pendentes = appState.decisoes && appState.decisoes[g] ? 0 : c.length;
+    return Math.max(0, orcamentoAtual(g) - pendentes * 5);
+  }
+  function notaRecursos(saldo) {
+    // Orçamento inicial de 100 = 7/10. Vitória = 110 = 9/10; colapso = 85 = 5/10.
+    // Faixa de 50 a 120 pontos; bônus e penalidades impactam a rodada atual.
+    return limitar(Math.round((saldo - 50) / 7),0,10);
   }
 
   var CARTAS_CRISE = [
@@ -637,7 +634,10 @@
     pontuacoes: {},
     consultas: {},
     penalidadesGrupos: {},
+    orcamentosGrupos: {},
+    reservaRHUtilizada: {},
     historicoRodadas: [],
+    rodadaSalva: false,
     cartasSorteadasPorGrupo: {},
     tempoEsgotadoGlobal: false,
     currentScreen: 'screen-home'
@@ -727,6 +727,11 @@
   }
 
   function reiniciarRodada() {
+    var concluidas = (appState.historicoRodadas || []).length;
+    if (concluidas >= 6) { alert('As seis rodadas já foram concluídas. Consulte o ranking final.'); return; }
+    if (!appState.rodadaSalva && Object.keys(appState.crises || {}).length) {
+      alert('Antes de avançar, registre a pontuação da rodada atual em “Salvar Rodada”.'); return;
+    }
     if (confirm("Tem certeza que deseja iniciar uma nova rodada? As cartas atuais e decisões das equipes serão resetadas.")) {
       appState.crises = {};
       appState.decisoes = {};
@@ -734,10 +739,10 @@
       appState.pontuacoes = {};
       appState.temposPitchEquipes = {};
       appState.tempoEsgotadoGlobal = false;
+      appState.rodadaSalva = false;
       guardarEstado();
       renderMestreDecisoes();
       renderSorteioMestre();
-      renderMonitorCombateBosses();
       alert("Nova rodada iniciada com sucesso!");
     }
   }
@@ -749,16 +754,22 @@
       appState.decisoes = {};
       appState.consultas = {};
       appState.penalidadesGrupos = {};
+      appState.orcamentosGrupos = {};
+      appState.reservaRHUtilizada = {};
       appState.pontuacoes = {};
+      appState.historicoRodadas = [];
+      appState.rodadaSalva = false;
       appState.temposPitchEquipes = {};
       guardarEstado();
       renderSorteioMestre();
-      renderMonitorCombateBosses();
       alert("Histórico de cartas limpo e orçamentos restaurados para 100 pontos!");
     }
   }
 
   function sortearCartas() {
+    if ((appState.historicoRodadas || []).length >= 6) { alert('Limite de seis rodadas atingido.'); return; }
+    if (appState.rodadaSalva) { alert('Clique em “Nova Rodada” antes de sortear novamente.'); return; }
+    if (Object.keys(appState.crises || {}).length) { alert('Já existem cartas sorteadas nesta rodada.'); return; }
     if (!appState.cartasSorteadasPorGrupo) appState.cartasSorteadasPorGrupo = {};
     var disponiveis = {};
     var esgotadas = [];
@@ -810,27 +821,34 @@
     });
     guardarEstado();
     renderSorteioMestre();
-    renderMonitorCombateBosses();
     alert('Megabosses sorteados! Nenhuma equipe recebeu uma carta já registrada em seu histórico.');
   }
 
   function salvarRodadaNoHistorico() {
+    if (appState.rodadaSalva) { alert('Esta rodada já foi salva.'); return; }
+    if ((appState.historicoRodadas || []).length >= 6) { alert('Limite de seis rodadas atingido.'); return; }
+    if (!appState.grupos.every(function(g) { return !!(appState.decisoes && appState.decisoes[g] && appState.pontuacoes && appState.pontuacoes[g] && appState.pontuacoes[g].pitchAvaliado); })) {
+      alert('Todas as equipes devem submeter as respostas e receber a nota do pitch antes de salvar a rodada.'); return;
+    }
     if (!appState.historicoRodadas) appState.historicoRodadas = [];
     var num = appState.historicoRodadas.length + 1;
-    var dados = { rodada: num, hora: new Date().toLocaleTimeString(), placar: {}, cartasRodada: {}, temposPitch: Object.assign({}, appState.temposPitchEquipes) };
+    var dados = { rodada: num, hora: new Date().toLocaleTimeString(), placar: {}, cartasRodada: {} };
     appState.grupos.forEach(function(g) {
       dados.placar[g] = Object.assign({}, appState.pontuacoes[g] || { total: 0 });
       dados.cartasRodada[g] = appState.crises[g]?.titulo || 'N/A';
     });
     appState.historicoRodadas.push(dados);
+    appState.rodadaSalva = true;
     guardarEstado();
     renderHistoricoTendencias();
-    alert("Rodada " + num + " salva no histórico!");
+    renderRanking();
+    alert('Rodada ' + num + ' de 6 salva! ' + (num === 6 ? 'Partida concluída: confira o ranking final.' : 'Clique em Nova Rodada para continuar.'));
   }
 
   function limparHistoricoRodadas() {
     if (confirm("Apagar todo o histórico de rodadas?")) {
       appState.historicoRodadas = [];
+      appState.rodadaSalva = false;
       guardarEstado();
       renderHistoricoTendencias();
     }
@@ -881,39 +899,6 @@
     el.innerHTML = html || '<p class="subtitle">Aguardando sorteio...</p>';
   }
 
-  function renderMonitorCombateBosses() {
-    var container = document.getElementById('container-monitor-bosses');
-    if (!container) return;
-    var html = '';
-    appState.grupos.forEach(function(g) {
-      var c = appState.crises && appState.crises[g];
-      var dec = appState.decisoes && appState.decisoes[g];
-      var statusBadge = '<span class="badge badge-warning">Em Combate</span>';
-      if (dec) {
-        if (dec.resultado === 'vitoria') {
-          statusBadge = '<span class="badge badge-success">Boss Eliminado</span>';
-        } else if (dec.resultado === 'parcial') {
-          statusBadge = '<span class="badge badge-warning">Mitigação Parcial</span>';
-        } else {
-          statusBadge = '<span class="badge badge-danger">Colapso / Sobreviveu</span>';
-        }
-      }
-      
-      html += '<div class="card" style="margin-bottom:0; background:#0b0f19;">' +
-        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
-          '<strong style="color:var(--cyan); font-family:\'Orbitron\'; font-size:0.95rem;">' + escaparHTML(g) + '</strong>' +
-          statusBadge +
-        '</div>' +
-        (c && c.titulo ? '<div style="text-align:center; padding:10px; background:#111827; border-radius:8px; border:1px solid var(--border-neon);">' +
-          '<div style="font-size:2.2rem; margin-bottom:4px;">' + c.emoji + '</div>' +
-          '<h4 style="font-size:0.9rem; color:var(--magenta);">' + escaparHTML(c.titulo) + '</h4>' +
-          '<p style="font-size:0.75rem; color:var(--danger); margin-top:2px;">' + escaparHTML(c.ameaca) + '</p>' +
-        '</div>' : '<p class="subtitle" style="margin:0; text-align:center;">Nenhum Megaboss sorteado.</p>') +
-      '</div>';
-    });
-    container.innerHTML = html;
-  }
-
   function switchMestreTab(tab) {
     document.querySelectorAll('.mestre-tab-content').forEach(function(c) { c.style.display = 'none'; });
     document.querySelectorAll('.nav-tabs .tab-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -955,10 +940,9 @@
     if (!g) return;
     
     var cLista = (appState.consultas && appState.consultas[g]) || [];
-    var baseOrcamento = appState.penalidadesGrupos?.[g] ? 85 : 100;
-    var saldo = Math.max(0, baseOrcamento - (cLista.length * 5));
+    var saldo = orcamentoDisponivel(g);
     var elSaldo = document.getElementById('display-saldo-orçamento');
-    if (elSaldo) elSaldo.innerText = 'Orçamento: ' + saldo + ' pts ' + (appState.penalidadesGrupos?.[g] ? '(Penalidade -15 pts)' : '');
+    if (elSaldo) elSaldo.innerText = 'Orçamento: ' + saldo + ' pts | Reserva RH: ' + (appState.reservaRHUtilizada && appState.reservaRHUtilizada[g] ? 'utilizada' : '15 pts disponíveis (uso único)');
 
     var c = appState.crises && appState.crises[g];
     var container = document.getElementById('container-carta-grupo');
@@ -1039,7 +1023,7 @@
     if (!appState.consultas[g]) appState.consultas[g] = [];
     if (!appState.crises[g]) { alert('Aguarde o sorteio da carta.'); return; }
     if (appState.decisoes && appState.decisoes[g]) { alert('A decisão já foi enviada.'); return; }
-    if (appState.consultas[g].length >= (appState.penalidadesGrupos?.[g] ? 17 : 20)) { alert('Saldo insuficiente.'); return; }
+    if (orcamentoDisponivel(g) < 5) { alert('Saldo insuficiente.'); return; }
     appState.consultas[g].push({ esp: esp, hora: new Date().toLocaleTimeString(), travado: false });
     guardarEstado();
     renderPainelGrupo();
@@ -1096,8 +1080,26 @@
     var ptsViab = Math.round((opt1.ptsViab + opt2.ptsViab) / 2);
     var cLista = (appState.consultas && appState.consultas[g]) || [];
     
-    var baseOrcamento = appState.penalidadesGrupos?.[g] ? 85 : 100;
-    var ptsSaldo = Math.max(0, Math.round((baseOrcamento - (cLista.length * 5)) / 10));
+    var saldoAntesBoss = orcamentoDisponivel(g);
+    // Reserva estratégica única por equipe, liberada apenas se não houver 10 pontos
+    // para financiar a implementação. O usuário confirma a liberação.
+    if (!appState.reservaRHUtilizada) appState.reservaRHUtilizada = {};
+    var reservaAcionada = false;
+    if (saldoAntesBoss < 10 && !appState.reservaRHUtilizada[g]) {
+      if (confirm('Orçamento insuficiente para implementar a política de RH. Liberar a reserva estratégica única de 15 pontos para esta equipe?')) {
+        reservaAcionada = true;
+        saldoAntesBoss += 15;
+      }
+    }
+    var implementada = saldoAntesBoss >= 10;
+    if (!implementada && !confirm('Sem orçamento suficiente, a política NÃO será implementada. A equipe ainda pode registrar suas respostas, mas terá 0 pontos de recursos e não receberá bônus orçamentário. Continuar?')) return;
+    var impactoBoss = resultadoCombate === 'vitoria' ? 10 : (resultadoCombate === 'parcial' ? 5 : -15);
+    // Custo operacional fixo, cobrado uma única vez na submissão de cada equipe.
+    var custoOperacional = 10;
+    // Resultado positivo só gera retorno se a estratégia foi implementada.
+    var impactoEfetivo = implementada ? impactoBoss : Math.min(0, impactoBoss);
+    var saldoDepoisBoss = limitar(saldoAntesBoss - (implementada ? custoOperacional : 0) + impactoEfetivo,0,120);
+    var ptsSaldo = implementada ? notaRecursos(saldoDepoisBoss) : 0;
 
     var bossElement = document.getElementById('boss-card-element');
     if (bossElement) {
@@ -1113,30 +1115,26 @@
       }
 
       if (!appState.decisoes) appState.decisoes = {};
-      appState.decisoes[g] = { q1Texto: opt1.texto, q2Texto: opt2.texto, pitchText: pitchText, resultado: resultadoCombate, eliminado: resultadoCombate === 'vitoria', totalAuto: ptsFund + ptsViab + ptsSaldo };
+      appState.decisoes[g] = { q1Texto: opt1.texto, q2Texto: opt2.texto, pitchText: pitchText, resultado: resultadoCombate, implementada: implementada, reservaAcionada: reservaAcionada, eliminado: resultadoCombate === 'vitoria', totalAuto: ptsFund + ptsViab + ptsSaldo };
 
       if (!appState.historicoDecisoesGrupos) appState.historicoDecisoesGrupos = {};
       if (!appState.historicoDecisoesGrupos[g]) appState.historicoDecisoesGrupos[g] = [];
-      appState.historicoDecisoesGrupos[g].push({ cartaTitulo: c.titulo, q1Texto: opt1.texto, q2Texto: opt2.texto, pitchText: pitchText, resultado: resultadoCombate });
+      appState.historicoDecisoesGrupos[g].push({ cartaTitulo: c.titulo, q1Texto: opt1.texto, q2Texto: opt2.texto, pitchText: pitchText, resultado: resultadoCombate, implementada: implementada, reservaAcionada: reservaAcionada });
 
+      // Consolida os gastos de consultoria e o resultado da crise no saldo persistente.
+      if (!appState.orcamentosGrupos) appState.orcamentosGrupos = {};
+      if (!appState.reservaRHUtilizada) appState.reservaRHUtilizada = {};
+      appState.orcamentosGrupos[g] = saldoDepoisBoss;
+      if (reservaAcionada) appState.reservaRHUtilizada[g] = true;
       if (!appState.penalidadesGrupos) appState.penalidadesGrupos = {};
-      
-      var bonusBoss = 0;
-      if (resultadoCombate === 'vitoria') {
-        bonusBoss = 20; 
-        appState.penalidadesGrupos[g] = false;
-      } else if (resultadoCombate === 'parcial') {
-        bonusBoss = 10; 
-        appState.penalidadesGrupos[g] = false;
-      } else {
-        bonusBoss = -15; 
-        appState.penalidadesGrupos[g] = true; 
-      }
-
+      appState.penalidadesGrupos[g] = resultadoCombate === 'colapso';
       if (!appState.pontuacoes) appState.pontuacoes = {};
-      var base = { fund: ptsFund, viab: ptsViab, saldo: ptsSaldo, qualidadeBanca: 15, bonusBoss: bonusBoss };
-      var calculada = pontuacaoCalculada(base, 15, 0);
-      appState.pontuacoes[g] = Object.assign({}, base, { pitch: calculada.pitch, total: calculada.total });
+      var base = { fund: ptsFund, viab: ptsViab, saldo: ptsSaldo,
+        qualidadeBanca: null, pitchAvaliado: false, impactoOrcamento: impactoEfetivo, implementada: implementada, reservaAcionada: reservaAcionada,
+        orcamentoFinal: saldoDepoisBoss, custoOperacional: custoOperacional };
+      var calculada = pontuacaoCalculada(base,0);
+      appState.pontuacoes[g] = Object.assign({}, base, { pitch: 0, total: calculada.total });
+      // Historico de consultas preservado; os custos ja foram incorporados ao saldo.
 
       guardarEstado();
       atualizarInterface();
@@ -1186,19 +1184,28 @@
     var html = '';
     appState.grupos.forEach(function(g) {
       var d = appState.decisoes && appState.decisoes[g];
-      if (d) {
-        var status = '<span class="badge badge-danger">Sobreviveu (-15 Penalidade)</span>';
-        if (d.resultado === 'vitoria') status = '<span class="badge badge-success">Boss Eliminado (+20 Pitch)</span>';
-        else if (d.resultado === 'parcial') status = '<span class="badge badge-warning">Mitigação Parcial (+10 Pitch)</span>';
-
-        html += '<div style="background:#0b0f19; border:1px solid var(--border-neon); padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.85rem;">' +
-          '<div style="display:flex; justify-content:space-between;"><strong>' + escaparHTML(g) + '</strong> ' + status + '</div>' +
-          '<p style="margin-top:4px;"><strong>Decisão:</strong> ' + escaparHTML(d.q1Texto) + '</p>' +
-          '<p><strong>Pitch:</strong> ' + escaparHTML(d.pitchText) + '</p>' +
-        '</div>';
-      }
+      var c = appState.crises && appState.crises[g];
+      var resultado = d ? d.resultado : '';
+      var status = !d ? '<span class="badge badge-warning">Aguardando resposta</span>' :
+        resultado === 'vitoria' ? '<span class="badge badge-success">Vitória · +10 orçamento</span>' :
+        resultado === 'parcial' ? '<span class="badge badge-warning">Mitigação · +5 orçamento</span>' :
+        '<span class="badge badge-danger">Colapso · −15 orçamento</span>';
+      var titulo = c && c.titulo ? escaparHTML(c.titulo) : 'Carta não sorteada';
+      var emoji = c && c.emoji ? c.emoji : '📋';
+      html += '<article class="decisao-monitor-card">' +
+        '<div class="decisao-monitor-top"><strong class="decisao-monitor-equipe">' + escaparHTML(g) + '</strong>' + status + '</div>' +
+        '<div class="decisao-monitor-crise"><span class="decisao-monitor-emoji">' + emoji + '</span><div><strong>' + titulo + '</strong>' +
+        (c && c.ameaca ? '<p>' + escaparHTML(c.ameaca) + '</p>' : '') + '</div></div>' +
+        (d ? '<div class="decisao-monitor-detalhes">' +
+          '<p><strong>Decisão 1</strong>' + escaparHTML(d.q1Texto || 'Não registrada') + '</p>' +
+          '<p><strong>Decisão 2</strong>' + escaparHTML(d.q2Texto || 'Não registrada') + '</p>' +
+          '<p><strong>Justificativa da equipe</strong>' + escaparHTML(d.pitchText || 'Não registrada') + '</p>' +
+          (d.implementada === false ? '<span class="badge badge-danger">Política não implementada</span>' : '') +
+          (d.reservaAcionada ? '<span class="badge badge-warning">Reserva de RH utilizada</span>' : '') +
+          '</div>' : '<p class="decisao-monitor-vazio">Aguardando envio das decisões.</p>') +
+        '</article>';
     });
-    container.innerHTML = html || '<p class="subtitle">Aguardando decisões das equipes...</p>';
+    container.innerHTML = html || '<p class="subtitle">Nenhuma equipe cadastrada.</p>';
   }
 
   function renderAlertaConsultoriasMestre() {
@@ -1215,7 +1222,7 @@
         cList.forEach(function(item, index) {
           var travado = item.travado;
           var estiloBtn = travado ? "background:var(--danger); color:white;" : "background:var(--success); color:white;";
-          var textoBtn = travado ? "🔒 Travado (Estorno Bloqueado)" : "🔓 Destravado (Estorno Permitido)";
+          var textoBtn = travado ? "🔒 Travado" : "🔓 Destravado";
           html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; gap:8px;">' +
             '<span>• ' + escaparHTML(item.esp) + ' (' + escaparHTML(item.hora) + ')</span>' +
             '<button class="btn" style="font-size:0.65rem; padding:4px 8px; ' + estiloBtn + '" onclick="toggleTravaConsultaItem(' + JSON.stringify(g).replace(/&/g,'&amp;').replace(/"/g,'&quot;') + ', ' + index + ')">' + textoBtn + '</button>' +
@@ -1297,80 +1304,35 @@
   function pauseMasterTimer() { clearInterval(timerMaster); timerMaster = null; }
   function resetMasterTimer() { pauseMasterTimer(); masterTime = 0; updateTimerDisplay(); }
 
-  var timerGroup = null, segundosGastosAtual = 0;
-  function formatarTempoMMSS(s) {
-    var m = Math.floor(s/60), sec = s%60;
-    return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
-  }
-  function mudarGrupoPitch() {
-    if (timerGroup) { clearInterval(timerGroup); timerGroup = null; }
-    var sel = document.getElementById('select-grupo-timer-individual');
-    segundosGastosAtual = limitar(sel && appState.temposPitchEquipes?.[sel.value] || 0,0,300);
-    atualizarTempoPitchVisual();
-  }
-  function startGroupTimer() {
-    if (!timerGroup) {
-      timerGroup = setInterval(function() {
-        if (segundosGastosAtual < 300) {
-          segundosGastosAtual++;
-          var el = document.getElementById('display-group-timer');
-          if (el) el.innerText = formatarTempoMMSS(300 - segundosGastosAtual);
-        }
-        if (segundosGastosAtual >= 300) { clearInterval(timerGroup); timerGroup = null; }
-      }, 1000);
-    }
-  }
-  function pausarEfetuarRegistroPitch() {
-    if (timerGroup) { clearInterval(timerGroup); timerGroup = null; }
-    var selInd = document.getElementById('select-grupo-timer-individual');
-    if (!selInd) return;
-    var grupoSel = selInd.value;
-    if (!appState.temposPitchEquipes) appState.temposPitchEquipes = {};
-    appState.temposPitchEquipes[grupoSel] = segundosGastosAtual;
-    guardarEstado();
-    alert('Tempo guardado para ' + grupoSel + '!');
-  }
-  function resetGroupTimer() {
-    if (timerGroup) { clearInterval(timerGroup); timerGroup = null; }
-    segundosGastosAtual = 0;
-    var el = document.getElementById('display-group-timer');
-    if (el) el.innerText = "05:00";
-  }
-
   function carregarPontuacaoGrupo() {
     var selEval = document.getElementById('select-grupo-eval');
     if (!selEval) return;
     var g = selEval.value;
-    var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 15, saldo: 10, bonusBoss: 0 };
+    var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 0, saldo: 10, pitchAvaliado: false, impactoOrcamento: 0 };
     var pilarEl = document.getElementById('pilar-pitch-qualidade');
-    if (pilarEl) pilarEl.value = p.qualidadeBanca == null ? 15 : p.qualidadeBanca;
+    if (pilarEl) pilarEl.value = p.qualidadeBanca == null ? 0 : p.qualidadeBanca;
     calcMediaRanking();
   }
 
   function calcMediaRanking() {
     var selEval = document.getElementById('select-grupo-eval');
-    if (!selEval) return { pitchFinal: 15, total: 15 };
+    if (!selEval) return { pitchFinal: 0, total: 0 };
     var g = selEval.value;
-    var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 15, saldo: 10, bonusBoss: 0 };
+    var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 0, saldo: 10, pitchAvaliado: false, impactoOrcamento: 0 };
     var pilarEl = document.getElementById('pilar-pitch-qualidade');
-    var qualidadeBanca = pilarEl ? limitar(pilarEl.value, 0, 20) : 15;
-    var tempoGasto = appState.temposPitchEquipes?.[g] || 0;
-    var calculada = pontuacaoCalculada(p, qualidadeBanca, tempoGasto);
-    var bonusTempo = calculada.bonusTempo;
-    var bonusBoss = calculada.bonusBoss;
+    var qualidadeBanca = pilarEl ? limitar(pilarEl.value, 0, 20) : 0;
+    p = Object.assign({},p,{pitchAvaliado:true});
+    var calculada = pontuacaoCalculada(p, qualidadeBanca);
+    var impactoOrcamento = Number(p.impactoOrcamento)||0;
     var pitchFinal = calculada.pitch;
     var displayPitch = document.getElementById('display-nota-pitch-final');
-    var infoTempo = document.getElementById('info-tempo-pitch-calc');
-    var infoBonusVel = document.getElementById('info-bonus-velocidade');
     var infoBonusBoss = document.getElementById('info-bonus-boss');
     var displayTotal = document.getElementById('display-nota-final');
 
     if (displayPitch) displayPitch.innerText = pitchFinal;
-    if (infoTempo) infoTempo.innerText = tempoGasto > 0 ? formatarTempoMMSS(tempoGasto) : 'Não cronometrado';
-    if (infoBonusVel) infoBonusVel.innerText = '+' + bonusTempo + ' pts';
     if (infoBonusBoss) {
-      infoBonusBoss.innerText = (bonusBoss >= 0 ? '+' : '') + bonusBoss + ' pts';
-      infoBonusBoss.style.color = bonusBoss >= 0 ? 'var(--success)' : 'var(--danger)';
+      infoBonusBoss.innerText = (impactoOrcamento >= 0 ? '+' : '') + impactoOrcamento + ' pts no orçamento (não no pitch)';
+      infoBonusBoss.style.color = impactoOrcamento >= 0 ? 'var(--success)' : 'var(--danger)';
     }
 
     var total = calculada.total;
@@ -1385,7 +1347,7 @@
     var res = calcMediaRanking();
     if (!appState.pontuacoes) appState.pontuacoes = {};
     var atual = appState.pontuacoes[g] || { fund: 0, viab: 0, saldo: 10, bonusBoss: 0 };
-    appState.pontuacoes[g] = Object.assign({}, atual, { qualidadeBanca: limitar(document.getElementById('pilar-pitch-qualidade').value,0,20), pitch: res.pitchFinal, total: res.total });
+    appState.pontuacoes[g] = Object.assign({}, atual, { qualidadeBanca: limitar(document.getElementById('pilar-pitch-qualidade').value,0,20), pitchAvaliado:true, pitch: res.pitchFinal, total: res.total });
     guardarEstado();
     renderRanking();
     alert('Nota salva para ' + g + '!');
@@ -1394,13 +1356,16 @@
   function renderRanking() {
     var tbody = document.getElementById('tbody-ranking');
     if (!tbody) return;
+    var hist = appState.historicoRodadas || [];
     var lista = appState.grupos.map(function(g) {
       var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 0, saldo: 0, total: 0 };
-      return { grupo: g, auto: p.fund + p.viab + p.saldo, pitch: p.pitch, total: p.total };
+      var acumulado = hist.reduce(function(soma,h) { return soma + Number((h.placar[g] || {}).total || 0); },0);
+      var atual = appState.rodadaSalva ? 0 : Number(p.total || 0);
+      return { grupo:g, auto:(Number(p.fund)||0)+(Number(p.viab)||0)+(Number(p.saldo)||0), pitch:Number(p.pitch)||0, rodada:atual, total:acumulado+atual };
     });
     lista.sort(function(a,b) { return b.total - a.total; });
     tbody.innerHTML = lista.map(function(item, idx) {
-      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.auto + ' pts</td><td>' + item.pitch + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' pts</strong></td></tr>';
+      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.auto + ' pts</td><td>' + item.pitch + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' / 600 pts</strong></td></tr>';
     }).join('');
   }
 
@@ -1414,8 +1379,7 @@
     if (active) {
       if (active.id === 'screen-mestre') {
         renderSorteioMestre();
-        renderMonitorCombateBosses();
-        renderMestreDecisoes();
+          renderMestreDecisoes();
         renderAlertaConsultoriasMestre();
         renderGerenciarMensagensMestre();
         renderRanking();
@@ -1487,11 +1451,14 @@
       const dados = snapshot.val();
       if (dados) {
         appState = dados;
+        if (appState.rodadaSalva == null) appState.rodadaSalva = false;
         if (!Array.isArray(appState.mensagens)) appState.mensagens = [];
         if (!appState.consultas) appState.consultas = {};
         if (!appState.crises) appState.crises = {};
         if (!appState.decisoes) appState.decisoes = {};
         if (!appState.penalidadesGrupos) appState.penalidadesGrupos = {};
+        if (!appState.orcamentosGrupos) appState.orcamentosGrupos = {};
+      if (!appState.reservaRHUtilizada) appState.reservaRHUtilizada = {};
         if (!Array.isArray(appState.historicoRodadas)) appState.historicoRodadas = [];
         if (!appState.cartasSorteadasPorGrupo) appState.cartasSorteadasPorGrupo = {};
         if (!appState.historicoDecisoesGrupos) appState.historicoDecisoesGrupos = {};
