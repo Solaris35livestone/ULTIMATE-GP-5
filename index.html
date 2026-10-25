@@ -946,7 +946,35 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
 
 <script>
   // ATENÇÃO: senha local é apenas barreira visual; segurança real exige Firebase Auth e regras.
-  var SENHA_MESTRE = "rh2026";
+  // A senha do Mestre e das equipes é verificada pelo Firebase Authentication.
+  var SENHA_MESTRE = null;
+  var cyberRole = null, cyberTeamIndex = -1, cyberAuthReady = false;
+  var cyberPublicState = null, cyberPrivateState = {};
+  var CYBER_BASE = 'cyber_rh_seguro_v1';
+  var CYBER_PRIVATE_KEYS = ['decisoes','consultas','historicoDecisoesGrupos'];
+  function cyberTeamId(g) { return String((appState.grupos || []).indexOf(g) + 1); }
+  function cyberPublicOnly(st) { var x=JSON.parse(JSON.stringify(st||{})); CYBER_PRIVATE_KEYS.forEach(function(k){delete x[k]});return x; }
+  function cyberPrivateFor(g,st) { var o={}; CYBER_PRIVATE_KEYS.forEach(function(k){o[k]=((st[k]||{})[g]??null)});return o; }
+  function cyberMergeState() {
+    if(!cyberPublicState)return;
+    var screen=appState.currentScreen;
+    appState=JSON.parse(JSON.stringify(cyberPublicState));
+    CYBER_PRIVATE_KEYS.forEach(function(k){appState[k]={}});
+    Object.keys(cyberPrivateState).forEach(function(i){var g=appState.grupos[Number(i)-1],d=cyberPrivateState[i];if(!g||!d)return;CYBER_PRIVATE_KEYS.forEach(function(k){if(d[k]!=null)appState[k][g]=d[k]})});
+    if(screen && screen!=='screen-home' && screen!=='screen-grupo-login')appState.currentScreen=screen;
+    snapshotBase=JSON.parse(JSON.stringify(appState));
+    sincronizacaoPronta=true;
+    atualizarInterface();
+  }
+  async function cyberSignIn(role,teamIndex,password) {
+    if(!window.cyberAuthLogin){cyberAlert('Aguarde a inicialização da autenticação.');return false;}
+    try {
+      await window.cyberAuthLogin(role,teamIndex,password);
+      cyberRole=role;cyberTeamIndex=teamIndex;
+      return true;
+    } catch(e) {console.error(e);cyberAlert('Senha incorreta ou acesso indisponível.');return false;}
+  }
+
   function escaparHTML(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function limitar(n, minimo, maximo) { n = Number(n); return Number.isFinite(n) ? Math.min(maximo, Math.max(minimo,n)) : minimo; }
 
@@ -1186,15 +1214,14 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
 
   async function tentarEntrarMestre() {
-    var s = await cyberDialog("Digite a senha para acessar o painel do Mestre.", "password");
-    if (s === SENHA_MESTRE) {
-      mudarTela('screen-mestre');
-    } else if (s !== null) {
-      cyberAlert("Senha incorreta!");
-    }
+    var s=await cyberDialog('Digite a senha da conta Mestre no Firebase.', 'password');
+    if(s===null)return;
+    if(await cyberSignIn('mestre',-1,s))mudarTela('screen-mestre');
   }
 
   function mudarTela(id) {
+    if(id==='screen-mestre' && cyberRole!=='mestre'){cyberAlert('Acesso exclusivo do Mestre.');return;}
+    if(id==='screen-grupo' && cyberRole!=='equipe'){cyberAlert('Acesso exclusivo das equipes.');return;}
     document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
     var alvo = document.getElementById(id);
     if (alvo) {
@@ -1753,24 +1780,20 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var alvoTabBtn = document.getElementById('tab-grupo-' + tab);
     if (alvoPane) alvoPane.style.display = 'block';
     if (alvoTabBtn) alvoTabBtn.classList.add('active');
+    if (tab === 'orientacoes' && alvoTabBtn) { alvoTabBtn.style.boxShadow = ''; alvoTabBtn.style.borderColor = ''; }
   }
 
-  function entrarComoGrupo() {
-    var selL = document.getElementById('select-grupo-login');
-    if (!selL) return;
-    var g = selL.value;
-    if (!g) {
-      cyberAlert("Por favor, selecione uma equipe.");
-      return;
-    }
-    grupoAtivo = g;
-    localStorage.setItem('cyber_rh_grupo_ativo', grupoAtivo);
-
-    var headerNome = document.getElementById('grupo-header-nome');
-    if (headerNome) headerNome.innerText = 'Painel: ' + grupoAtivo;
-    switchGrupoTab('decisao');
-    mudarTela('screen-grupo');
-    atualizarInterface();
+  async function entrarComoGrupo() {
+    var sel=document.getElementById('select-grupo-login');if(!sel)return;
+    var g=sel.value,idx=(appState.grupos||[]).indexOf(g);
+    if(idx<0||idx>5){cyberAlert('Equipe inválida.');return;}
+    var senha=await cyberDialog('Digite a senha individual da '+g+'.','password');
+    if(senha===null)return;
+    if(!await cyberSignIn('equipe',idx,senha))return;
+    grupoAtivo=g;
+    localStorage.setItem('cyber_rh_grupo_ativo',g);
+    var header=document.getElementById('grupo-header-nome');if(header)header.innerText='Painel: '+g;
+    switchGrupoTab('decisao');mudarTela('screen-grupo');atualizarInterface();
   }
 
 
@@ -2115,6 +2138,31 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     renderGerenciarMensagensMestre();
   }
 
+  // Aviso automático de novos comunicados para a equipe, sem alterar o Firebase.
+  var comunicadosVistosPorEquipe = {};
+  function verificarNovosComunicadosEquipe() {
+    if (!grupoAtivo || !document.getElementById('screen-grupo')?.classList.contains('active')) return;
+    var equipe = grupoAtivo;
+    var msgs = (appState.mensagens || []).filter(function(m) { return m.dest === 'TODOS' || m.dest === equipe; });
+    var chaves = msgs.map(function(m) { return JSON.stringify([m.dest, m.texto, m.hora]); });
+    if (!Object.prototype.hasOwnProperty.call(comunicadosVistosPorEquipe, equipe)) {
+      // Ao entrar, não disparar notificações antigas.
+      comunicadosVistosPorEquipe[equipe] = chaves;
+      return;
+    }
+    var anteriores = comunicadosVistosPorEquipe[equipe];
+    var novos = chaves.filter(function(chave) { return !anteriores.includes(chave); });
+    comunicadosVistosPorEquipe[equipe] = chaves;
+    if (novos.length) {
+      var ultima = msgs.find(function(m) { return JSON.stringify([m.dest, m.texto, m.hora]) === novos[novos.length - 1]; });
+      if (ultima) {
+        avisoTemporario('📢 Novo comunicado: ' + ultima.texto);
+        var botao = document.getElementById('tab-grupo-orientacoes');
+        if (botao) { botao.style.boxShadow = '0 0 18px #35dfff'; botao.style.borderColor = '#35dfff'; }
+      }
+    }
+  }
+
   function renderOrientacoes() {
     var g = grupoAtivo;
     var container = document.getElementById('container-orientacoes-tempo-real');
@@ -2183,7 +2231,8 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     // encerramentos feitos simultaneamente em outros dispositivos.
     if (!window.rtdbRunTransaction || !window.db || encerramentoDeliberacaoEmCurso) return;
     encerramentoDeliberacaoEmCurso=true;
-    var timerRef=window.rtdbRef(window.db,'rh_na_real_v11_fix/estado_jogo/cronometroCompeticao');
+    if(cyberRole!=='mestre'){encerramentoDeliberacaoEmCurso=false;return;}
+    var timerRef=window.rtdbRef(window.db,CYBER_BASE+'/publico/cronometroCompeticao');
     window.rtdbRunTransaction(timerRef,function(atual){
       if (!atual || atual.etapa!=='deliberacao' || atual.status!=='rodando' || atual.sorteioId!==t.sorteioId) return;
       return Object.assign({},atual,{status:'encerrado',restante:0,terminaEm:0,encerramentoMotivo:'todas_decisoes',encerradoEm:Date.now()});
@@ -2302,6 +2351,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
           verificarRecebimentoEquipe();
           renderHistoricoPessoalGrupo();
           renderOrientacoes();
+          verificarNovosComunicadosEquipe();
         }
       }
     }
@@ -2345,7 +2395,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if(!await cyberConfirm('Confirmação final: todas as equipes verão o estado recuperado. Deseja realmente restaurar?'))return;
     criarPontoRecuperacao('Antes da restauração manual');
     var novo=JSON.parse(JSON.stringify(selecionado.registro.estado));
-    var baseRef=window.rtdbRef(window.db,'rh_na_real_v11_fix/estado_jogo');
+    var baseRef=window.rtdbRef(window.db,CYBER_BASE+'/publico');
     atualizarStatusSeguranca('Restaurando...');
     // Atualiza a raiz por substituição de seus campos, incluindo exclusões antigas.
     var alteracoes={}; diferencasEstado(snapshotBase || {},novo,[],alteracoes);
@@ -2353,16 +2403,29 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     window.rtdbUpdate(baseRef,alteracoes).then(function(){atualizarStatusSeguranca('Restauração sincronizada');avisoTemporario('Cópia restaurada com sucesso.');}).catch(function(e){console.error(e);atualizarStatusSeguranca('Falha na restauração');cyberAlert('Não foi possível restaurar no Firebase. O estado remoto não foi confirmado.');});
   }
   function guardarEstado() {
-    salvarCopiaLocal(CHAVE_RECUPERACAO, "Alteração no jogo");
-    if (!sincronizacaoPronta || !window.rtdbUpdate || !window.db) return;
-    var alteracoes = {};
-    diferencasEstado(snapshotBase || {}, appState, [], alteracoes);
-    if (!Object.keys(alteracoes).length) return;
-    var baseRef = window.rtdbRef(window.db, 'rh_na_real_v11_fix/estado_jogo');
-    // Atualizações por caminho evitam sobrescrever decisões de outras equipes.
-    atualizarStatusSeguranca('Sincronizando com Firebase...');
-    window.rtdbUpdate(baseRef, alteracoes).then(function(){atualizarStatusSeguranca('');}).catch(function(e) { console.error('Falha na sincronização:',e); atualizarStatusSeguranca('Falha de sincronização — cópia local disponível'); cyberAlert('Não foi possível sincronizar a alteração. Verifique sua conexão e permissões.'); });
-    snapshotBase = JSON.parse(JSON.stringify(appState));
+    if(!sincronizacaoPronta || !window.rtdbUpdate || !window.db || !cyberRole)return;
+    if(cyberRole==='mestre') {
+      var pub=cyberPublicOnly(appState), dif={};
+      diferencasEstado(cyberPublicState||{},pub,[],dif);
+      if(Object.keys(dif).length)window.rtdbUpdate(window.rtdbRef(window.db,CYBER_BASE+'/publico'),dif).catch(function(e){console.error(e);cyberAlert('Falha ao sincronizar o Mestre.');});
+      cyberPublicState=JSON.parse(JSON.stringify(pub));
+      // Mestre pode editar históricos e decisões por equipe, com permissão administrativa.
+      (appState.grupos||[]).forEach(function(g,j){
+        var i=String(j+1),novo=cyberPrivateFor(g,appState),velho=cyberPrivateState[i]||{};
+        if(JSON.stringify(novo)!==JSON.stringify(velho)){
+          window.rtdbSet(window.rtdbRef(window.db,CYBER_BASE+'/equipes/'+i),novo).catch(console.error);
+          cyberPrivateState[i]=JSON.parse(JSON.stringify(novo));
+        }
+      });
+      snapshotBase=JSON.parse(JSON.stringify(appState));
+    } else if(cyberRole==='equipe') {
+      var i=String(cyberTeamIndex+1),g=(appState.grupos||[])[cyberTeamIndex];
+      if(!g)return;
+      var privado=cyberPrivateFor(g,appState);
+      window.rtdbSet(window.rtdbRef(window.db,CYBER_BASE+'/equipes/'+i),privado).catch(function(e){console.error(e);cyberAlert('Não foi possível salvar a resposta.');});
+      cyberPrivateState[i]=JSON.parse(JSON.stringify(privado));
+      // Dados públicos, como pontuação e orçamento, só podem ser escritos pelo Mestre.
+    }
   }
 
   document.addEventListener("DOMContentLoaded", function() {
@@ -2370,63 +2433,44 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   });
 </script>
 
-<!-- SINCRONIZAÇÃO EM TEMPO REAL VIA FIREBASE REALTIME DATABASE -->
+<!-- SINCRONIZAÇÃO PROTEGIDA: FIREBASE AUTH + REALTIME DATABASE -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-  import { getDatabase, ref, update, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAkzK08rwDpigza4KylOE-Qty2XwD2modg",
-    authDomain: "rpg-gp-5.firebaseapp.com",
-    databaseURL: "https://rpg-gp-5-default-rtdb.firebaseio.com",
-    projectId: "rpg-gp-5",
-    storageBucket: "rpg-gp-5.firebasestorage.app",
-    messagingSenderId: "296654029932",
-    appId: "1:296654029932:web:3288d89ff8c8c0b0740449",
-    measurementId: "G-PZFXQ5QFEZ"
-  };
-
-  try {
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    window.db = db;
-    window.rtdbRef = ref;
-    window.rtdbUpdate = update;
-    window.rtdbOnValue = onValue;
-    window.rtdbRunTransaction = runTransaction;
-
-    const estadoRef = ref(db, 'rh_na_real_v11_fix/estado_jogo');
-    onValue(estadoRef, (snapshot) => {
-      const dados = snapshot.val();
-      if (dados) {
-        appState = dados;
-        if (appState.rodadaSalva == null) appState.rodadaSalva = false;
-        if (!Array.isArray(appState.mensagens)) appState.mensagens = [];
-        if (!appState.consultas) appState.consultas = {};
-        if (!appState.crises) appState.crises = {};
-        if (!appState.decisoes) appState.decisoes = {};
-        if (!appState.penalidadesGrupos) appState.penalidadesGrupos = {};
-        if (!appState.orcamentosGrupos) appState.orcamentosGrupos = {};
-      if (!appState.reservaRHUtilizada) appState.reservaRHUtilizada = {};
-        if (!Array.isArray(appState.historicoRodadas)) appState.historicoRodadas = [];
-        if (!appState.cartasSorteadasPorGrupo) appState.cartasSorteadasPorGrupo = {};
-        if (!appState.historicoDecisoesGrupos) appState.historicoDecisoesGrupos = {};
-        if (!appState.temposPitchEquipes) appState.temposPitchEquipes = {};
-        
-        snapshotBase = JSON.parse(JSON.stringify(appState));
-        salvarCopiaLocal(CHAVE_RECUPERACAO, "Estado recebido do Firebase");
-        sincronizacaoPronta = true;
-        atualizarStatusSeguranca('');
-        if (typeof atualizarInterface === 'function') atualizarInterface();
-        verificarEncerramentoDeliberacao();
-      } else {
-        snapshotBase = {}; sincronizacaoPronta = true; guardarEstado();
-      }
-    });
-  } catch (err) {
-    atualizarStatusSeguranca("Firebase indisponível — não restaurar sem conexão");
-    console.warn("Erro ao ligar ao Firebase - mantendo estado local:", err);
-  }
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js';
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js';
+import {getDatabase,ref,set,update,onValue,runTransaction} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js';
+const config={apiKey:'AIzaSyAkzK08rwDpigza4KylOE-Qty2XwD2modg',authDomain:'rpg-gp-5.firebaseapp.com',databaseURL:'https://rpg-gp-5-default-rtdb.firebaseio.com',projectId:'rpg-gp-5',storageBucket:'rpg-gp-5.firebasestorage.app',messagingSenderId:'296654029932',appId:'1:296654029932:web:3288d89ff8c8c0b0740449'};
+const ids=['0E49XN16RUbfAwAfsHKMwCtJIbu1','BxSvhIPJn5gw0yyKMDPxxBHgfkr2','eIxdFa4rcmcrbtKG7z6XPMZpQx42','CmHI0tyMewROufDFoxUEiHEXuha2','GmhceJ93KpeRDhYoCC2GAjC4rh02','LmfB966t7ERahXQ7Y6plSUweg9A2'];
+const mestre='cqaHPpNKhZSF3dHgJ5dUhoqwdDm2';
+const app=initializeApp(config),auth=getAuth(app),db=getDatabase(app);
+window.db=db;window.rtdbRef=ref;window.rtdbUpdate=update;window.rtdbSet=set;window.rtdbOnValue=onValue;window.rtdbRunTransaction=runTransaction;
+let unsub=[];
+function stop(){unsub.forEach(f=>f());unsub=[];cyberPublicState=null;cyberPrivateState={};sincronizacaoPronta=false;}
+function listen(role,idx){
+ stop();
+ unsub.push(onValue(ref(db,CYBER_BASE+'/publico'),snap=>{
+  cyberPublicState=snap.val()||cyberPublicOnly(appState);
+  cyberMergeState();
+ },err=>{console.error(err);cyberAlert('Leitura pública negada no Firebase. Verifique as regras.')}));
+ const indexes=role==='mestre'?[1,2,3,4,5,6]:[idx+1];
+ indexes.forEach(i=>unsub.push(onValue(ref(db,CYBER_BASE+'/equipes/'+i),snap=>{
+  cyberPrivateState[String(i)]=snap.val()||{};cyberMergeState();
+ },err=>console.error('Acesso à equipe '+i,err))));
+}
+window.cyberAuthLogin=async function(role,idx,password){
+ const email=role==='mestre'?'mestre@cyberrh.example':'equipe'+(idx+1)+'@cyberrh.example';
+ const cred=await signInWithEmailAndPassword(auth,email,password);
+ const expected=role==='mestre'?mestre:ids[idx];
+ if(cred.user.uid!==expected){await signOut(auth);throw Error('UID não corresponde ao perfil');}
+ cyberRole=role;cyberTeamIndex=idx;listen(role,idx);
+ return true;
+};
+onAuthStateChanged(auth,user=>{
+ if(!user){stop();cyberRole=null;cyberTeamIndex=-1;return;}
+ if(user.uid===mestre){cyberRole='mestre';cyberTeamIndex=-1;listen('mestre',-1);return;}
+ const idx=ids.indexOf(user.uid);
+ if(idx>=0){cyberRole='equipe';cyberTeamIndex=idx;listen('equipe',idx);return;}
+ signOut(auth);
+});
 </script>
 
 
