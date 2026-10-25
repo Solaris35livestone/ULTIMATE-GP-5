@@ -954,13 +954,13 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   var CYBER_PRIVATE_KEYS = ['decisoes','consultas','historicoDecisoesGrupos'];
   function cyberTeamId(g) { return String((appState.grupos || []).indexOf(g) + 1); }
   function cyberPublicOnly(st) { var x=JSON.parse(JSON.stringify(st||{})); CYBER_PRIVATE_KEYS.forEach(function(k){delete x[k]});return x; }
-  function cyberPrivateFor(g,st) { var o={}; CYBER_PRIVATE_KEYS.forEach(function(k){o[k]=((st[k]||{})[g]??null)});return o; }
+  function cyberPrivateFor(g,st) { var o={_rodadaId:String(st.identificadorSorteioAtual||'')}; CYBER_PRIVATE_KEYS.forEach(function(k){o[k]=((st[k]||{})[g]??null)}); if((st.decisoes||{})[g]){o.resultadoCalculado={pontuacao:(st.pontuacoes||{})[g]||null,orcamento:(st.orcamentosGrupos||{})[g]??null,reserva:!!(st.reservaRHUtilizada||{})[g],penalidade:!!(st.penalidadesGrupos||{})[g]};} return o; }
   function cyberMergeState() {
     if(!cyberPublicState)return;
     var screen=appState.currentScreen;
     appState=JSON.parse(JSON.stringify(cyberPublicState));
     CYBER_PRIVATE_KEYS.forEach(function(k){appState[k]={}});
-    Object.keys(cyberPrivateState).forEach(function(i){var g=appState.grupos[Number(i)-1],d=cyberPrivateState[i];if(!g||!d)return;CYBER_PRIVATE_KEYS.forEach(function(k){if(d[k]!=null)appState[k][g]=d[k]})});
+    Object.keys(cyberPrivateState).forEach(function(i){var g=appState.grupos[Number(i)-1],d=cyberPrivateState[i];if(!g||!d)return; if(String(d._rodadaId||'')!==String(appState.identificadorSorteioAtual||''))return;CYBER_PRIVATE_KEYS.forEach(function(k){if(d[k]!=null)appState[k][g]=d[k]})});
     if(screen && screen!=='screen-home' && screen!=='screen-grupo-login')appState.currentScreen=screen;
     snapshotBase=JSON.parse(JSON.stringify(appState));
     sincronizacaoPronta=true;
@@ -1004,6 +1004,11 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   function orcamentoAtual(g) {
     if (!appState.orcamentosGrupos) appState.orcamentosGrupos = {};
     var valor = appState.orcamentosGrupos[g];
+    // O resultado consolidado da decisão da rodada prevalece sobre um saldo público atrasado.
+    var resultado = appState.pontuacoes && appState.pontuacoes[g];
+    if (resultado && resultado.orcamentoFinal != null && Number.isFinite(Number(resultado.orcamentoFinal))) {
+      valor = Number(resultado.orcamentoFinal);
+    }
     return valor == null ? 100 : limitar(Number(valor),0,120);
   }
   function orcamentoDisponivel(g) {
@@ -1227,6 +1232,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if (alvo) {
       alvo.classList.add('active');
       appState.currentScreen = id;
+      if (id==='screen-grupo' || id==='screen-mestre') sessionStorage.setItem('cyber_rh_tela_autenticada',id);
       atualizarInterface();
     }
   }
@@ -1354,7 +1360,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     deck.classList.add('shuffling');
     status.textContent='BARALHO FECHADO • EMBARALHANDO AS 6 CARTAS...';
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var delay = reduced ? 100 : 3200;
+    var delay = reduced ? 100 : 1300;
     setTimeout(function(){
       if(token!==sorteioAnimacaoToken)return;
       deck.classList.remove('shuffling');
@@ -1371,7 +1377,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         deck.classList.remove('selected-shuffling');
         status.textContent='';
         enviarCarta(0);
-      },reduced ? 100 : 2500);
+      },reduced ? 100 : 900);
       function enviarCarta(i) {
         if(token!==sorteioAnimacaoToken)return;
         if(i>=grupos.length){iniciarDeliberacaoAposDistribuicao();status.textContent='';close.style.display='inline-block';return;}
@@ -1390,7 +1396,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
             if(token!==sorteioAnimacaoToken)return;
             target.classList.remove('impact');target.classList.add('revealed');
             enviarCarta(i+1);
-          },reduced ? 80 : 850);
+          },reduced ? 80 : 250);
         };
         source.classList.add('dispatched');
         if(reduced){target.style.setProperty('--team-glow',source.style.getPropertyValue('--c') || '#57dcff');complete();return;}
@@ -1410,7 +1416,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
           {transform:'translate('+(dx*.35)+'px,'+(dy*.18-90)+'px) rotate(24deg) scale(1.22)',opacity:1,offset:.35},
           {transform:'translate('+(dx*.78)+'px,'+(dy*.62-35)+'px) rotate(-13deg) scale(.95)',opacity:1,offset:.72},
           {transform:'translate('+dx+'px,'+dy+'px) rotate(0deg) scale('+scale+')',opacity:.2,offset:1}
-        ],{duration:1150,easing:'cubic-bezier(.2,.7,.15,1)',fill:'forwards'});
+        ],{duration:500,easing:'cubic-bezier(.2,.7,.15,1)',fill:'forwards'});
         animation.onfinish=function(){ghost.remove();complete();};
         animation.oncancel=function(){ghost.remove();};
       }
@@ -2409,14 +2415,8 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       diferencasEstado(cyberPublicState||{},pub,[],dif);
       if(Object.keys(dif).length)window.rtdbUpdate(window.rtdbRef(window.db,CYBER_BASE+'/publico'),dif).catch(function(e){console.error(e);cyberAlert('Falha ao sincronizar o Mestre.');});
       cyberPublicState=JSON.parse(JSON.stringify(pub));
-      // Mestre pode editar históricos e decisões por equipe, com permissão administrativa.
-      (appState.grupos||[]).forEach(function(g,j){
-        var i=String(j+1),novo=cyberPrivateFor(g,appState),velho=cyberPrivateState[i]||{};
-        if(JSON.stringify(novo)!==JSON.stringify(velho)){
-          window.rtdbSet(window.rtdbRef(window.db,CYBER_BASE+'/equipes/'+i),novo).catch(console.error);
-          cyberPrivateState[i]=JSON.parse(JSON.stringify(novo));
-        }
-      });
+      // Não sobrescrever respostas das equipes durante mudanças de rodada ou de estado público.
+      // As decisões são gravadas exclusivamente pela equipe autenticada.
       snapshotBase=JSON.parse(JSON.stringify(appState));
     } else if(cyberRole==='equipe') {
       var i=String(cyberTeamIndex+1),g=(appState.grupos||[])[cyberTeamIndex];
@@ -2436,7 +2436,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
 <!-- SINCRONIZAÇÃO PROTEGIDA: FIREBASE AUTH + REALTIME DATABASE -->
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js';
-import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js';
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,setPersistence,browserLocalPersistence} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js';
 import {getDatabase,ref,set,update,onValue,runTransaction} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js';
 const config={apiKey:'AIzaSyAkzK08rwDpigza4KylOE-Qty2XwD2modg',authDomain:'rpg-gp-5.firebaseapp.com',databaseURL:'https://rpg-gp-5-default-rtdb.firebaseio.com',projectId:'rpg-gp-5',storageBucket:'rpg-gp-5.firebasestorage.app',messagingSenderId:'296654029932',appId:'1:296654029932:web:3288d89ff8c8c0b0740449'};
 const ids=['0E49XN16RUbfAwAfsHKMwCtJIbu1','BxSvhIPJn5gw0yyKMDPxxBHgfkr2','eIxdFa4rcmcrbtKG7z6XPMZpQx42','CmHI0tyMewROufDFoxUEiHEXuha2','GmhceJ93KpeRDhYoCC2GAjC4rh02','LmfB966t7ERahXQ7Y6plSUweg9A2'];
@@ -2444,20 +2444,69 @@ const mestre='cqaHPpNKhZSF3dHgJ5dUhoqwdDm2';
 const app=initializeApp(config),auth=getAuth(app),db=getDatabase(app);
 window.db=db;window.rtdbRef=ref;window.rtdbUpdate=update;window.rtdbSet=set;window.rtdbOnValue=onValue;window.rtdbRunTransaction=runTransaction;
 let unsub=[];
+let sessaoRestaurada=false;
+function restaurarTelaAutenticada(role,idx){
+ if(sessaoRestaurada)return;
+ sessaoRestaurada=true;
+ if(role==='mestre'){mudarTela('screen-mestre');return;}
+ if(role==='equipe' && idx>=0){
+  grupoAtivo=(appState.grupos||[])[idx]||'';
+  if(!grupoAtivo){sessaoRestaurada=false;return;}
+  localStorage.setItem('cyber_rh_grupo_ativo',grupoAtivo);
+  const header=document.getElementById('grupo-header-nome');
+  if(header)header.textContent='Painel: '+grupoAtivo;
+  switchGrupoTab('decisao');
+  mudarTela('screen-grupo');
+ }
+}
 function stop(){unsub.forEach(f=>f());unsub=[];cyberPublicState=null;cyberPrivateState={};sincronizacaoPronta=false;}
 function listen(role,idx){
  stop();
  unsub.push(onValue(ref(db,CYBER_BASE+'/publico'),snap=>{
   cyberPublicState=snap.val()||cyberPublicOnly(appState);
+  // Reconstituir o saldo a partir do resultado já publicado quando a chave de orçamento faltar.
+  if(!cyberPublicState.orcamentosGrupos)cyberPublicState.orcamentosGrupos={};
+  Object.entries(cyberPublicState.pontuacoes||{}).forEach(([nome,p])=>{
+    if(cyberPublicState.orcamentosGrupos[nome]==null && p && Number.isFinite(Number(p.orcamentoFinal)))
+      cyberPublicState.orcamentosGrupos[nome]=Number(p.orcamentoFinal);
+  });
   cyberMergeState();
+  // Pode chegar primeiro o resultado privado e depois o estado público: conciliar nos dois eventos.
+  if(role==='mestre')Object.entries(cyberPrivateState).forEach(([i,d])=>publicarResultadoPendente(Number(i),d));
+  // Não forçar a navegação em cada atualização remota.
+  if(cyberRole==='equipe' && cyberTeamIndex>=0) grupoAtivo=(appState.grupos||[])[cyberTeamIndex]||'';
+  restaurarTelaAutenticada(role,idx);
  },err=>{console.error(err);cyberAlert('Leitura pública negada no Firebase. Verifique as regras.')}));
  const indexes=role==='mestre'?[1,2,3,4,5,6]:[idx+1];
  indexes.forEach(i=>unsub.push(onValue(ref(db,CYBER_BASE+'/equipes/'+i),snap=>{
   cyberPrivateState[String(i)]=snap.val()||{};cyberMergeState();
+  // Publicação automática pelo Mestre conectado; nunca dá escrita pública às equipes.
+  if(role==='mestre') publicarResultadoPendente(i,cyberPrivateState[String(i)]);
  },err=>console.error('Acesso à equipe '+i,err))));
+}
+const resultadosEmPublicacao=new Set();
+async function publicarResultadoPendente(i,d){
+ if(!d || !d.decisoes || !d.resultadoCalculado || !d.resultadoCalculado.pontuacao || !cyberPublicState)return;
+ if(String(d._rodadaId||'')!==String(cyberPublicState.identificadorSorteioAtual||''))return;
+ const g=(cyberPublicState.grupos||[])[i-1];if(!g)return;
+ const r=d.resultadoCalculado, chave=String(i)+':'+String(d._rodadaId);
+ if(resultadosEmPublicacao.has(chave))return;
+ // A validação definitiva dos cálculos deve ocorrer no servidor (Cloud Functions).
+ // Este modo é provisório e requer o Mestre conectado.
+ const existente=((cyberPublicState.pontuacoes||{})[g]);
+ if(existente && (existente.pitchAvaliado || (Number(existente.total)===Number(r.pontuacao.total) && Number((cyberPublicState.orcamentosGrupos||{})[g])===Number(r.orcamento))))return;
+ resultadosEmPublicacao.add(chave);
+ const alteracoes={};
+ alteracoes['pontuacoes/'+g]=r.pontuacao;
+ alteracoes['orcamentosGrupos/'+g]=r.orcamento;
+ alteracoes['reservaRHUtilizada/'+g]=r.reserva;
+ alteracoes['penalidadesGrupos/'+g]=r.penalidade;
+ try{await update(ref(db,CYBER_BASE+'/publico'),alteracoes)}catch(e){console.error('Erro ao publicar pontuação',e)}
+ finally{resultadosEmPublicacao.delete(chave)}
 }
 window.cyberAuthLogin=async function(role,idx,password){
  const email=role==='mestre'?'mestre@cyberrh.example':'equipe'+(idx+1)+'@cyberrh.example';
+ await setPersistence(auth,browserLocalPersistence);
  const cred=await signInWithEmailAndPassword(auth,email,password);
  const expected=role==='mestre'?mestre:ids[idx];
  if(cred.user.uid!==expected){await signOut(auth);throw Error('UID não corresponde ao perfil');}
@@ -2465,7 +2514,7 @@ window.cyberAuthLogin=async function(role,idx,password){
  return true;
 };
 onAuthStateChanged(auth,user=>{
- if(!user){stop();cyberRole=null;cyberTeamIndex=-1;return;}
+ if(!user){stop();sessaoRestaurada=false;cyberRole=null;cyberTeamIndex=-1;return;}
  if(user.uid===mestre){cyberRole='mestre';cyberTeamIndex=-1;listen('mestre',-1);return;}
  const idx=ids.indexOf(user.uid);
  if(idx>=0){cyberRole='equipe';cyberTeamIndex=idx;listen('equipe',idx);return;}
