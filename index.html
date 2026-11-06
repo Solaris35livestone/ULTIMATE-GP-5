@@ -751,18 +751,11 @@ body { overflow-x:hidden; }
         <label for="stage-timer-select">Etapa</label>
         <select id="stage-timer-select" onchange="setMasterTimerStage()">
           <option value="deliberacao">1. Deliberação — 15 minutos</option>
-          <option value="pitches">2. Apresentações orais — 4 min por equipe</option>
-          <option value="debriefing">3. Debriefing — 15 minutos</option>
+          <option value="debriefing">2. Debriefing — 15 minutos</option>
         </select>
         <p id="timer-stage-info" class="subtitle" style="margin-top:10px">Começa automaticamente após a última carta ser distribuída.</p>
         <div class="timer" id="display-master-timer">15:00</div>
         <p id="timer-status" style="text-align:center;color:var(--cyan);font-weight:700">Aguardando distribuição</p>
-        <div id="pitch-timer-controls" style="display:none;margin-top:14px">
-          <label for="pitch-timer-equipe">Equipe em apresentação</label>
-          <select id="pitch-timer-equipe" onchange="selecionarEquipePitch()"></select>
-          
-          <button class="btn btn-sec" onclick="proximaEquipePitch()">Próxima equipe →</button>
-        </div>
         <div class="btn-group" style="justify-content:center;margin-top:14px">
           <button class="btn" onclick="startMasterTimer()">Iniciar / Retomar</button>
           <button class="btn btn-sec" onclick="pauseMasterTimer()">Pausar</button>
@@ -776,28 +769,10 @@ body { overflow-x:hidden; }
     <div id="mestre-ranking" class="mestre-tab-content" style="display:none;">
       <div class="grid">
         <div class="card">
-          <h3 class="title" style="font-size:1.1rem;">Nota do Pitch</h3>
-          <div class="form-group">
-            <label for="select-grupo-eval">Equipe:</label>
-            <select id="select-grupo-eval" onchange="carregarPontuacaoGrupo()"></select>
-          </div>
-          <div class="form-group">
-            <label>Qualidade do Pitch pela Banca:</label>
-            <input type="number" id="pilar-pitch-qualidade" min="0" max="20" value="0" oninput="calcMediaRanking()">
-          </div>
-          <div style="background:#0b0f19; padding:10px; border-radius:8px; border:1px solid var(--border-neon); font-size:0.85rem; margin-bottom:12px;">
-            <p><strong>Impacto no orçamento (Boss):</strong> <span id="info-bonus-boss" style="font-weight:700;">0 pts</span></p>
-            <p style="margin-top:4px; font-weight:700; color:var(--success);">Nota Final do Pitch: <span id="display-nota-pitch-final">0</span> / 20 pts</p>
-          </div>
-          <p style="text-align:center; font-weight:700; margin:10px 0;">Total Geral: <span id="display-nota-final" style="color:var(--cyan);">0</span> / 100 pts</p>
-          <button class="btn" style="width:100%;" onclick="salvarPontuacaoGrupo()">Salvar Nota do Pitch</button>
-        </div>
-
-        <div class="card">
           <h3 class="title" style="font-size:1.1rem;">Ranking Acumulado (até 600 pontos)</h3>
           <table>
             <thead>
-              <tr><th>Pos.</th><th>Equipe</th><th>Automática</th><th>Pitch</th><th>Total</th></tr>
+              <tr><th>Pos.</th><th>Equipe</th><th>Pontos da rodada</th><th>Total acumulado</th></tr>
             </thead>
             <tbody id="tbody-ranking"></tbody>
           </table>
@@ -807,10 +782,19 @@ body { overflow-x:hidden; }
           <button id="btn-rever-podio" class="btn btn-sec" style="display:none;width:100%;margin-top:12px" onclick="mostrarPodioFinal()">🏆 Ver pódio final e comemoração</button>
           </div>
           <button class="btn btn-danger" style="width:100%;margin-top:12px" onclick="encerrarCompeticaoAntecipadamente()">🏁 Encerrar competição e abrir pódio</button>
-          <p style="font-size:.76rem;color:var(--text-muted);margin-top:6px">Pode ser usado antes da 6ª rodada. Considera rodadas salvas e, se houver, notas já avaliadas da rodada atual.</p>
+          <p style="font-size:.76rem;color:var(--text-muted);margin-top:6px">Pode ser usado antes da 6ª rodada. Considera apenas rodadas salvas e resultados já registrados.</p>
         </div>
       </div>
 
+      <div class="card" style="margin-top:16px">
+        <h3 class="title">🛡️ Auditoria da rodada</h3>
+        <div id="cyber-auditoria" aria-live="polite"></div>
+        <div class="btn-group"><button class="btn btn-sec" onclick="exportarRelatorioCyber()">📥 Exportar relatório CSV</button><button class="btn btn-sec" onclick="exportarRelatorioHTML()">📄 Relatório para impressão</button></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3 class="title">🎓 Avaliação pedagógica final</h3>
+        <div id="cyber-avaliacao-final"></div>
+      </div>
       <div class="card" style="margin-top: 16px;">
         <h3 class="title" style="font-size:1.1rem;">📈 Análise de Tendências &amp; Histórico</h3>
         <div id="container-historico-tendencias" style="overflow-x: auto; margin-top:10px;">
@@ -881,7 +865,7 @@ body { overflow-x:hidden; }
             </div>
 
             <div class="form-group">
-              <label for="decisao-justificativa-pitch">Síntese do Argumento para o Pitch:</label>
+              <label for="decisao-justificativa-pitch">Justificativa escrita da equipe:</label>
               <textarea id="decisao-justificativa-pitch" rows="3" placeholder="Resuma a lógica da equipe..."></textarea>
             </div>
 
@@ -890,7 +874,7 @@ body { overflow-x:hidden; }
 
           <div id="status-bloqueio-ataque" style="display:none; text-align:center; padding:16px; background:#0b0f19; border:1px solid var(--success); border-radius:8px; margin-top:10px;">
             <p style="color:var(--success); font-weight:700; font-size:1.1rem;">🔒 ATAQUE REALIZADO E REGISTRADO!</p>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Suas escolhas foram submetidas com sucesso. Consulte a aba "Meu Histórico" para o Pitch.</p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Suas escolhas foram submetidas com sucesso. Consulte a aba "Meu Histórico" para rever sua decisão.</p>
           </div>
         </div>
       </div>
@@ -954,13 +938,13 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   var CYBER_PRIVATE_KEYS = ['decisoes','consultas','historicoDecisoesGrupos'];
   function cyberTeamId(g) { return String((appState.grupos || []).indexOf(g) + 1); }
   function cyberPublicOnly(st) { var x=JSON.parse(JSON.stringify(st||{})); CYBER_PRIVATE_KEYS.forEach(function(k){delete x[k]});return x; }
-  function cyberPrivateFor(g,st) { var o={_rodadaId:String(st.identificadorSorteioAtual||'')}; CYBER_PRIVATE_KEYS.forEach(function(k){o[k]=((st[k]||{})[g]??null)}); if((st.decisoes||{})[g]){o.resultadoCalculado={pontuacao:(st.pontuacoes||{})[g]||null,orcamento:(st.orcamentosGrupos||{})[g]??null,reserva:!!(st.reservaRHUtilizada||{})[g],penalidade:!!(st.penalidadesGrupos||{})[g]};} return o; }
+  function cyberPrivateFor(g,st) { var o={_rodadaId:String(st.identificadorSorteioAtual||''),_teamIndex:cyberTeamIndex+1}; CYBER_PRIVATE_KEYS.forEach(function(k){o[k]=((st[k]||{})[g]??null)}); if((st.decisoes||{})[g]){o.resultadoCalculado={pontuacao:(st.pontuacoes||{})[g]||null,orcamento:(st.orcamentosGrupos||{})[g]??null,reserva:!!(st.reservaRHUtilizada||{})[g],penalidade:!!(st.penalidadesGrupos||{})[g]};} return o; }
   function cyberMergeState() {
     if(!cyberPublicState)return;
     var screen=appState.currentScreen;
     appState=JSON.parse(JSON.stringify(cyberPublicState));
     CYBER_PRIVATE_KEYS.forEach(function(k){appState[k]={}});
-    Object.keys(cyberPrivateState).forEach(function(i){var g=appState.grupos[Number(i)-1],d=cyberPrivateState[i];if(!g||!d)return; if(String(d._rodadaId||'')!==String(appState.identificadorSorteioAtual||''))return;CYBER_PRIVATE_KEYS.forEach(function(k){if(d[k]!=null)appState[k][g]=d[k]})});
+    Object.keys(cyberPrivateState).forEach(function(i){if(cyberRole==='equipe' && Number(i)!==cyberTeamIndex+1)return;var g=appState.grupos[Number(i)-1],d=cyberPrivateState[i];if(!g||!d|| (d._teamIndex!=null && Number(d._teamIndex)!==Number(i)))return; CYBER_PRIVATE_KEYS.forEach(function(k){if(k==='historicoDecisoesGrupos'){if(d[k]!=null)appState[k][g]=d[k]}else if(String(d._rodadaId||'')===String(appState.identificadorSorteioAtual||'') && d[k]!=null)appState[k][g]=d[k]})});
     if(screen && screen!=='screen-home' && screen!=='screen-grupo-login')appState.currentScreen=screen;
     snapshotBase=JSON.parse(JSON.stringify(appState));
     sincronizacaoPronta=true;
@@ -988,18 +972,17 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     return {a:a ? a.value : null,b:b ? b.value : null,t:t ? t.value : ''};
   }
   function restaurarFormularioEquipe(d) {
-    if (!d) return;
+    if (!d) {var campo=document.getElementById('decisao-justificativa-pitch');if(campo)campo.value='';return;}
     var a = Array.from(document.querySelectorAll('#opts-q1 input')).find(function(e){return e.value === d.a;});
     var b = Array.from(document.querySelectorAll('#opts-q2 input')).find(function(e){return e.value === d.b;});
     if (a) a.checked = true; if (b) b.checked = true;
     var t = document.getElementById('decisao-justificativa-pitch'); if (t) t.value = d.t;
   }
-  // Pitch e exclusivo do Mestre; os resultados do Boss afetam somente o orcamento.
-  function pontuacaoCalculada(p, qualidade) {
+  // Avaliação automática: fundamentação 50, viabilidade 40, recursos 10.
+  function pontuacaoCalculada(p) {
     p = p || {};
-    var pitch = p.pitchAvaliado ? limitar(qualidade,0,20) : 0;
-    var automatico = limitar(p.fund,0,40) + limitar(p.viab,0,30) + limitar(p.saldo,0,10);
-    return {pitch:pitch,total:limitar(automatico + pitch,0,100)};
+    var automatico = limitar(p.fund,0,50) + limitar(p.viab,0,40) + limitar(p.saldo,0,10);
+    return {total:limitar(automatico,0,100)};
   }
   function orcamentoAtual(g) {
     if (!appState.orcamentosGrupos) appState.orcamentosGrupos = {};
@@ -1484,12 +1467,13 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     appState.decisoes = {};
     appState.consultas = {};
     appState.pontuacoes = {};
-    appState.temposPitchEquipes = {};
-    appState.cronometroCompeticao={etapa:'deliberacao',restante:900,status:'aguardando',terminaEm:0};
+    appState.cronometroCompeticao={etapa:'deliberacao',restante:900,status:'aguardando',terminaEm:0,sorteioId:'',alertas:{}};
     appState.tempoEsgotadoGlobal = false;
     appState.rodadaSalva = false;
     // ID único do sorteio: não muda quando a rodada é salva ou a tela é atualizada.
     appState.identificadorSorteioAtual = String(Date.now()) + '-' + Math.random().toString(36).slice(2, 9);
+    appState.cronometroCompeticao.sorteioId=appState.identificadorSorteioAtual;
+    atualizarTimerCompartilhado();
     if (!appState.cartasSorteadasPorGrupo) appState.cartasSorteadasPorGrupo = {};
     grupos.forEach(function(g) {
       if (!appState.cartasSorteadasPorGrupo[g]) appState.cartasSorteadasPorGrupo[g] = [];
@@ -1519,8 +1503,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       appState.historicoRodadas = [];
       appState.competicaoEncerrada = false;
       appState.rodadaSalva = false;
-      appState.temposPitchEquipes = {};
-      rascunhoEquipes = (appState.grupos || []).slice();
+        rascunhoEquipes = (appState.grupos || []).slice();
       guardarEstado();
       renderSorteioMestre();
       avisoTemporario("Histórico de cartas limpo e orçamentos restaurados para 100 pontos!");
@@ -1572,8 +1555,10 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     }
     appState.crises = {};
     appState.decisoes = {};
-    appState.temposPitchEquipes = {};
-    appState.cronometroCompeticao={etapa:'deliberacao',restante:900,status:'aguardando',terminaEm:0};
+    appState.cronometroCompeticao={etapa:'deliberacao',restante:900,status:'aguardando',terminaEm:0,sorteioId:'',alertas:{}};
+    appState.identificadorSorteioAtual=String(Date.now())+'-'+Math.random().toString(36).slice(2,9);
+    appState.cronometroCompeticao.sorteioId=appState.identificadorSorteioAtual;
+    atualizarTimerCompartilhado();
     appState.pontuacoes = {};
     appState.consultas = {};
     appState.grupos.forEach(function(g) {
@@ -1592,7 +1577,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var hist = appState.historicoRodadas || [];
     var lista = (appState.grupos || []).map(function(g) {
       var salvo = hist.reduce(function(s,h){return s + Number(((h.placar || {})[g] || {}).total || 0);},0);
-      var atual = appState.competicaoEncerrada && !appState.rodadaSalva && appState.pontuacoes && appState.pontuacoes[g] && appState.pontuacoes[g].pitchAvaliado ? Number(appState.pontuacoes[g].total || 0) : 0;
+      var atual = appState.competicaoEncerrada && !appState.rodadaSalva && appState.pontuacoes && appState.pontuacoes[g] ? Number(appState.pontuacoes[g].total || 0) : 0;
       return {grupo:g,total:salvo+atual};
     });
     lista.sort(function(a,b){return b.total-a.total || a.grupo.localeCompare(b.grupo,'pt-BR');});
@@ -1685,7 +1670,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   async function encerrarCompeticaoAntecipadamente() {
     if (!(appState.grupos || []).length) { cyberAlert('Cadastre pelo menos uma equipe antes de encerrar.'); return; }
     if (appState.competicaoEncerrada) { mostrarPodioFinal(); return; }
-    if (!await cyberConfirm('Encerrar a competição agora? O pódio usará as rodadas salvas e notas de pitch já avaliadas na rodada atual. Rodadas incompletas não receberão pontos fictícios.')) return;
+    if (!await cyberConfirm('Encerrar a competição agora? O pódio usará as rodadas salvas. Rodadas incompletas não receberão pontos fictícios.')) return;
     criarPontoRecuperacao("Antes do encerramento");
     appState.competicaoEncerrada = true;
     guardarEstado();
@@ -1697,15 +1682,28 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if(appState.competicaoEncerrada){cyberAlert('A competição já foi encerrada.');return;}
     if (appState.rodadaSalva) { cyberAlert('Esta rodada já foi salva.'); return; }
     if ((appState.historicoRodadas || []).length >= 6) { cyberAlert('Limite de seis rodadas atingido.'); return; }
-    if (!appState.grupos.every(function(g) { return !!(appState.decisoes && appState.decisoes[g] && appState.pontuacoes && appState.pontuacoes[g] && appState.pontuacoes[g].pitchAvaliado); })) {
-      cyberAlert('Todas as equipes devem submeter as respostas e receber a nota do pitch antes de salvar a rodada.'); return;
+    if (!appState.grupos.every(function(g) { return !!(appState.decisoes && appState.decisoes[g] && appState.pontuacoes && appState.pontuacoes[g] ); })) {
+      cyberAlert('Todas as equipes devem submeter as respostas antes de salvar a rodada.'); return;
+    }
+    // Conferir os registros privados originais, não apenas o placar publicado.
+    var rodadaId = String(appState.identificadorSorteioAtual || '');
+    var faltantes = (appState.grupos || []).filter(function(g, i) {
+      var d = cyberPrivateState[String(i + 1)];
+      return !d || String(d._rodadaId || '') !== rodadaId || !d.decisoes || !d.decisoes.q1Texto || !d.decisoes.q2Texto;
+    });
+    if (faltantes.length) {
+      cyberAlert('Aguarde a sincronização das respostas originais antes de salvar. Pendentes: ' + faltantes.join(', '));
+      return;
     }
     if (!appState.historicoRodadas) appState.historicoRodadas = [];
     var num = appState.historicoRodadas.length + 1;
-    var dados = { rodada: num, hora: new Date().toLocaleTimeString(), placar: {}, cartasRodada: {} };
+    var dados = { idRodada: String(appState.identificadorSorteioAtual||''), rodada: num, dataISO:new Date().toISOString(), hora: new Date().toLocaleTimeString(), placar: {}, cartasRodada: {}, decisoesRodada: {} };
     appState.grupos.forEach(function(g) {
       dados.placar[g] = Object.assign({}, appState.pontuacoes[g] || { total: 0 });
       dados.cartasRodada[g] = appState.crises[g]?.titulo || 'N/A';
+      var indice = appState.grupos.indexOf(g) + 1;
+      dados.decisoesRodada[g] = JSON.parse(JSON.stringify(cyberPrivateState[String(indice)].decisoes));
+      dados.decisoesRodada[g].orcamentoFinal = (appState.orcamentosGrupos||{})[g];
     });
     appState.historicoRodadas.push(dados);
     appState.rodadaSalva = true;
@@ -1725,6 +1723,39 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     }
   }
 
+  function renderAuditoriaCyber() {
+    var el=document.getElementById('cyber-auditoria');if(!el)return;
+    var grupos=appState.grupos||[], respostas=appState.decisoes||{}, rodada=(appState.historicoRodadas||[]).length+(appState.rodadaSalva?0:1);
+    el.innerHTML='<p><strong>Rodada '+Math.min(6,rodada)+'/6</strong> · '+grupos.filter(g=>!!respostas[g]).length+'/'+grupos.length+' equipes enviaram</p>'+
+      grupos.map(g=>'<p style="padding:7px;border-bottom:1px solid #334155">'+escaparHTML(g)+' — '+(respostas[g]?'✅ Resposta recebida':'⏳ Pendente')+'</p>').join('');
+  }
+  function dadosRelatorioCyber(){
+    return (appState.historicoRodadas||[]).flatMap(h=>(appState.grupos||[]).map(g=>{
+      var d=(h.decisoesRodada||{})[g]||{},p=(h.placar||{})[g]||{};
+      return {rodada:h.rodada,equipe:g,carta:(h.cartasRodada||{})[g]||'',decisao1:d.q1Texto||'',decisao2:d.q2Texto||'',justificativa:d.pitchText||'',resultado:d.resultado||'',fundamentacao:p.fund??'',viabilidade:p.viab??'',recursos:p.saldo??'',pontos:p.total??'',orcamento:d.orcamentoFinal??p.orcamentoFinal??''};
+    }));
+  }
+  function baixarCyber(nome,conteudo,tipo){var blob=new Blob([conteudo],{type:tipo});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+  function exportarRelatorioCyber(){
+    if(cyberRole!=='mestre')return;
+    var linhas=dadosRelatorioCyber(),campos=['rodada','equipe','carta','decisao1','decisao2','justificativa','resultado','fundamentacao','viabilidade','recursos','pontos','orcamento'];
+    var csv='\uFEFF'+[campos.join(';')].concat(linhas.map(l=>campos.map(k=>'"'+String(l[k]??'').replace(/"/g,'""')+'"').join(';'))).join('\r\n');
+    baixarCyber('CYBER_RH_relatorio_rodadas.csv',csv,'text/csv;charset=utf-8');
+  }
+  function exportarRelatorioHTML(){
+    if(cyberRole!=='mestre')return;
+    var linhas=dadosRelatorioCyber(),html='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Relatório CYBER RH</title><style>body{font:15px Arial;max-width:1000px;margin:30px auto;color:#152036}article{padding:15px;border:1px solid #ccc;margin:12px 0;break-inside:avoid}h1{color:#174c83}p{white-space:pre-wrap}</style><h1>CYBER RH — Relatório final</h1>';
+    linhas.forEach(l=>{html+='<article><h2>Rodada '+Number(l.rodada)+' — '+escaparHTML(l.equipe)+'</h2><p><b>Carta:</b> '+escaparHTML(l.carta)+'</p><p><b>Decisão 1:</b> '+escaparHTML(l.decisao1)+'</p><p><b>Decisão 2:</b> '+escaparHTML(l.decisao2)+'</p><p><b>Justificativa:</b> '+escaparHTML(l.justificativa)+'</p><p><b>Resultado:</b> '+escaparHTML(l.resultado)+' | <b>Pontos:</b> '+escaparHTML(l.pontos)+' | <b>Orçamento:</b> '+escaparHTML(l.orcamento)+'</p></article>';});
+    baixarCyber('CYBER_RH_relatorio_impressao.html',html+'</html>','text/html;charset=utf-8');
+  }
+  function renderAvaliacaoFinalCyber(){
+    var el=document.getElementById('cyber-avaliacao-final');if(!el)return;
+    if(cyberRole!=='mestre'){el.textContent='';return;}
+    if((appState.historicoRodadas||[]).length<6&&!appState.competicaoEncerrada){el.innerHTML='<p class="subtitle">Aguardando o encerramento da competição.</p>';return;}
+    var hist=appState.historicoRodadas||[];
+    el.innerHTML=hist.map(h=>'<details style="margin:10px 0;padding:12px;border:1px solid #364568;border-radius:9px"><summary>Rodada '+Number(h.rodada)+' — analisar decisões</summary>'+
+      (appState.grupos||[]).map(g=>{var d=(h.decisoesRodada||{})[g]||{},c=CARTAS_CRISE.find(x=>x.titulo===(h.cartasRodada||{})[g]);return '<div style="padding:12px;border-bottom:1px solid #34415c"><strong>'+escaparHTML(g)+'</strong><p>'+escaparHTML((h.cartasRodada||{})[g]||'')+'</p><p>Decisão 1: '+escaparHTML(d.q1Texto||'Não arquivada')+'</p><p>Decisão 2: '+escaparHTML(d.q2Texto||'Não arquivada')+'</p><p>Justificativa: '+escaparHTML(d.pitchText||'Não arquivada')+'</p><details><summary style="color:#f8c66e">Revelar soluções de referência</summary>'+(c?'<p>1: '+escaparHTML((c.opts1||[]).find(x=>x.ideal)?.texto||'')+'</p><p>2: '+escaparHTML((c.opts2||[]).find(x=>x.ideal)?.texto||'')+'</p>':'<p>Carta não identificada</p>')+'</details></div>';}).join('')+'</details>').join('');
+  }
   function renderHistoricoTendencias() {
     var container = document.getElementById('container-historico-tendencias');
     if (!container) return;
@@ -1735,7 +1766,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     appState.grupos.forEach(function(g) { totaisAcumulados[g] = 0; });
 
     var html = '<table><thead><tr><th>Rodada</th>';
-    appState.grupos.forEach(function(g) { html += '<th>' + g + '</th>'; });
+    appState.grupos.forEach(function(g) { html += '<th>' + escaparHTML(g) + '</th>'; });
     html += '</tr></thead><tbody>';
     
     hist.forEach(function(h) {
@@ -1756,6 +1787,19 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     html += '</tr>';
 
     html += '</tbody></table>';
+    html += '<h3 style="color:var(--cyan);margin:20px 0 12px">📋 Arquivo de decisões — todas as rodadas</h3>';
+    hist.forEach(function(h){
+      html += '<details style="margin:10px 0;border:1px solid var(--border-neon);border-radius:10px;padding:12px;background:#0b0f19"><summary style="cursor:pointer;font-weight:700;color:var(--cyan)">Rodada '+Number(h.rodada)+' — ver respostas de todas as equipes</summary><div class="decisoes-grid" style="margin-top:12px">';
+      appState.grupos.forEach(function(g){
+        var d=(h.decisoesRodada||{})[g]||{};
+        html += '<article class="decisao-monitor-card"><strong class="decisao-monitor-equipe">'+escaparHTML(g)+'</strong><p style="margin:7px 0;color:var(--magenta)">'+escaparHTML((h.cartasRodada||{})[g]||'Carta não registrada')+'</p>'+
+          '<p><strong>Decisão 1: </strong>'+escaparHTML(d.q1Texto||'Não arquivada nesta versão')+'</p>'+
+          '<p><strong>Decisão 2: </strong>'+escaparHTML(d.q2Texto||'Não arquivada nesta versão')+'</p>'+
+          '<p><strong>Justificativa escrita: </strong>'+escaparHTML(d.pitchText||'Não arquivada nesta versão')+'</p>'+
+          '<p><strong>Resultado: </strong>'+escaparHTML(d.resultado||'Não registrado')+'</p></article>';
+      });
+      html += '</div></details>';
+    });
     container.innerHTML = html;
   }
 
@@ -1821,7 +1865,8 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var containerConsultores = document.getElementById('container-consultores-grupo');
     
     var decisaoJaFeita = appState.decisoes && appState.decisoes[g];
-    var formularioAnterior = window.ultimaEquipeFormulario === g ? capturarFormularioEquipe() : null;
+    var formularioAnterior = window.ultimaEquipeFormulario === g && window.ultimaRodadaFormulario === appState.identificadorSorteioAtual ? capturarFormularioEquipe() : null;
+    window.ultimaRodadaFormulario = appState.identificadorSorteioAtual;
     window.ultimaEquipeFormulario = g;
 
     var formCombate = document.getElementById('form-combate-squad');
@@ -1926,6 +1971,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var g = grupoAtivo;
     var c = appState.crises && appState.crises[g];
     if (!g || !c) return;
+    if (appState.rodadaSalva || appState.competicaoEncerrada) { cyberAlert('Rodada encerrada: respostas bloqueadas.'); return; }
     if (appState.decisoes && appState.decisoes[g]) { cyberAlert('Decisão já registrada.'); return; }
 
     var opt1Checked = document.querySelector('input[name="opt_q1_' + g + '"]:checked');
@@ -1948,8 +1994,8 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       resultadoCombate = 'parcial';
     }
 
-    var ptsFund = Math.round((opt1.ptsFund + opt2.ptsFund) / 2);
-    var ptsViab = Math.round((opt1.ptsViab + opt2.ptsViab) / 2);
+    var ptsFund = Math.round(((opt1.ptsFund + opt2.ptsFund) / 2) * 50 / 40);
+    var ptsViab = Math.round(((opt1.ptsViab + opt2.ptsViab) / 2) * 40 / 30);
     var cLista = (appState.consultas && appState.consultas[g]) || [];
     
     var saldoAntesBoss = orcamentoDisponivel(g);
@@ -1980,7 +2026,9 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       else bossElement.classList.add('damage-shake');
     }
 
+    var rodadaEnvio=String(appState.identificadorSorteioAtual||'');
     setTimeout(function() {
+      if (appState.rodadaSalva || appState.competicaoEncerrada || grupoAtivo !== g || String(appState.identificadorSorteioAtual||'')!==rodadaEnvio) {cyberAlert('Envio cancelado: rodada alterada.');return;}
       if (bossElement) {
         bossElement.classList.remove('damage-shake');
         bossElement.classList.remove('damage-shake-partial');
@@ -2002,10 +2050,10 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       appState.penalidadesGrupos[g] = resultadoCombate === 'colapso';
       if (!appState.pontuacoes) appState.pontuacoes = {};
       var base = { fund: ptsFund, viab: ptsViab, saldo: ptsSaldo,
-        qualidadeBanca: null, pitchAvaliado: false, impactoOrcamento: impactoEfetivo, implementada: implementada, reservaAcionada: reservaAcionada,
+        impactoOrcamento: impactoEfetivo, implementada: implementada, reservaAcionada: reservaAcionada,
         orcamentoFinal: saldoDepoisBoss, custoOperacional: custoOperacional };
-      var calculada = pontuacaoCalculada(base,0);
-      appState.pontuacoes[g] = Object.assign({}, base, { pitch: 0, total: calculada.total });
+      var calculada = pontuacaoCalculada(base);
+      appState.pontuacoes[g] = Object.assign({}, base, { total: calculada.total });
       // Historico de consultas preservado; os custos ja foram incorporados ao saldo.
 
       guardarEstado();
@@ -2036,7 +2084,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         '<p style="color:var(--cyan); font-weight:700; padding-right:60px;">📄 ' + escaparHTML(h.cartaTitulo) + '</p>' +
         '<p style="font-size:0.85rem; margin-top:6px;"><strong>1. Decisão:</strong> ' + escaparHTML(h.q1Texto) + '</p>' +
         '<p style="font-size:0.85rem;"><strong>2. Estrutura:</strong> ' + escaparHTML(h.q2Texto) + '</p>' +
-        '<p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;"><strong>Síntese Pitch:</strong> ' + escaparHTML(h.pitchText) + '</p>' +
+        '<p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;"><strong>Justificativa escrita:</strong> ' + escaparHTML(h.pitchText) + '</p>' +
       '</div>';
     }).join('');
   }
@@ -2188,13 +2236,13 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   async function setMasterTimerStage() {
     var etapa=document.getElementById('stage-timer-select').value;
     if (!await cyberConfirm('Mudar de etapa e reiniciar o cronômetro?')) { atualizarTimerCompartilhado(); return; }
-    publicarTimer({etapa:etapa,restante:etapa==='pitches'?240:900,status:'pausado',terminaEm:0,equipeIndex:0,alertas:{}});
+    publicarTimer({etapa:etapa,restante:900,status:'pausado',terminaEm:0,equipeIndex:0,alertas:{}});
   }
   function updateTimerDisplay() { atualizarTimerCompartilhado(); }
   function startMasterTimer() {
     var t=Object.assign({},estadoTimer());
     if (t.status==='rodando') return;
-    t.restante=tempoRestanteTimer(t) || (t.etapa==='pitches'?240:900);
+    t.restante=tempoRestanteTimer(t) || (900);
     t.terminaEm=Date.now()+t.restante*1000;t.status='rodando';publicarTimer(t);
   }
   function pauseMasterTimer() {
@@ -2211,21 +2259,9 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if(t.status==='rodando')t.terminaEm=Date.now()+t.restante*1000;
     publicarTimer(t);
   }
-  function selecionarEquipePitch() {
-    var t=Object.assign({},estadoTimer()), el=document.getElementById('pitch-timer-equipe');
-    if(!el)return;
-    t.etapa='pitches';t.equipeIndex=Number(el.value)||0;t.restante=240;t.terminaEm=Date.now()+240000;t.status='rodando';publicarTimer(t);
-  }
-  function proximaEquipePitch() {
-    var t=Object.assign({},estadoTimer()), grupos=appState.grupos||[];
-    if(!grupos.length)return;
-    if(t.equipeIndex>=grupos.length-1)return;
-    
-    t.etapa='pitches';t.equipeIndex=(Number(t.equipeIndex)||0)+1;t.restante=240;t.terminaEm=Date.now()+240000;t.status='rodando';publicarTimer(t);
-  }
   function iniciarDeliberacaoAposDistribuicao() {
     var atual=estadoTimer(), id=appState.identificadorSorteioAtual || '';
-    if(atual.sorteioId===id && atual.status!=='aguardando')return;
+    if(atual.sorteioId===id && atual.status==='rodando')return;
     publicarTimer({etapa:'deliberacao',restante:900,terminaEm:Date.now()+900000,status:'rodando',sorteioId:id,equipeIndex:0});
   }
   var encerramentoDeliberacaoEmCurso = false;
@@ -2251,13 +2287,10 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var t=estadoTimer(), seg=tempoRestanteTimer(t), mm=String(Math.floor(seg/60)).padStart(2,'0'), ss=String(seg%60).padStart(2,'0');
     var display=document.getElementById('display-master-timer');if(display)display.textContent=mm+':'+ss;
     var select=document.getElementById('stage-timer-select');if(select && document.activeElement!==select)select.value=t.etapa||'deliberacao';
-    var pitch=document.getElementById('pitch-timer-controls');if(pitch)pitch.style.display=t.etapa==='pitches'?'block':'none';
-    var equipes=appState.grupos||[], sel=document.getElementById('pitch-timer-equipe');
-    if(sel){var opts=equipes.map(function(g,i){return '<option value="'+i+'">'+escaparHTML(g)+'</option>';}).join('');if(sel.innerHTML!==opts)sel.innerHTML=opts;sel.value=String(t.equipeIndex||0);}
-    var etapa=t.etapa==='pitches'?'Apresentação: '+(equipes[t.equipeIndex||0]||'Equipe'):t.etapa==='debriefing'?'Debriefing':'Deliberação coletiva';
+    var etapa=t.etapa==='debriefing'?'Debriefing':'Deliberação coletiva';
     var status=t.status==='rodando'?(seg?'Em andamento':'Tempo encerrado'):t.status==='pausado'?'Pausado':t.status==='encerrado'?(t.encerramentoMotivo==='todas_decisoes'?'Encerrado: todas as decisões recebidas':'Encerrado'):'Aguardando distribuição';
     var st=document.getElementById('timer-status');if(st)st.textContent=etapa+' • '+status;
-    var info=document.getElementById('timer-stage-info');if(info)info.textContent=t.etapa==='pitches'?'':t.etapa==='debriefing'?'15 minutos para feedback e encerramento.':'15 minutos a partir da entrega da última carta.';
+    var info=document.getElementById('timer-stage-info');if(info)info.textContent=t.etapa==='debriefing'?'15 minutos para feedback e encerramento.':'15 minutos a partir da entrega da última carta.';
     var grupo=document.getElementById('cronometro-compartilhado-equipe');
     if(grupo){grupo.style.display=t.status==='aguardando'||!document.getElementById('screen-grupo')?.classList.contains('active')?'none':'block';grupo.textContent=etapa+' • '+mm+':'+ss+' • '+status;}
     if(t.status==='rodando' && t.etapa==='deliberacao'){
@@ -2267,55 +2300,6 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
   setInterval(atualizarTimerCompartilhado,500);
 
-  function carregarPontuacaoGrupo() {
-    var selEval = document.getElementById('select-grupo-eval');
-    if (!selEval) return;
-    var g = selEval.value;
-    var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 0, saldo: 10, pitchAvaliado: false, impactoOrcamento: 0 };
-    var pilarEl = document.getElementById('pilar-pitch-qualidade');
-    if (pilarEl) pilarEl.value = p.qualidadeBanca == null ? 0 : p.qualidadeBanca;
-    calcMediaRanking();
-  }
-
-  function calcMediaRanking() {
-    var selEval = document.getElementById('select-grupo-eval');
-    if (!selEval) return { pitchFinal: 0, total: 0 };
-    var g = selEval.value;
-    var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 0, saldo: 10, pitchAvaliado: false, impactoOrcamento: 0 };
-    var pilarEl = document.getElementById('pilar-pitch-qualidade');
-    var qualidadeBanca = pilarEl ? limitar(pilarEl.value, 0, 20) : 0;
-    p = Object.assign({},p,{pitchAvaliado:true});
-    var calculada = pontuacaoCalculada(p, qualidadeBanca);
-    var impactoOrcamento = Number(p.impactoOrcamento)||0;
-    var pitchFinal = calculada.pitch;
-    var displayPitch = document.getElementById('display-nota-pitch-final');
-    var infoBonusBoss = document.getElementById('info-bonus-boss');
-    var displayTotal = document.getElementById('display-nota-final');
-
-    if (displayPitch) displayPitch.innerText = pitchFinal;
-    if (infoBonusBoss) {
-      infoBonusBoss.innerText = (impactoOrcamento >= 0 ? '+' : '') + impactoOrcamento + ' pts no orçamento (não no pitch)';
-      infoBonusBoss.style.color = impactoOrcamento >= 0 ? 'var(--success)' : 'var(--danger)';
-    }
-
-    var total = calculada.total;
-    if (displayTotal) displayTotal.innerText = total;
-    return { pitchFinal: pitchFinal, total: total };
-  }
-
-  function salvarPontuacaoGrupo() {
-    var selEval = document.getElementById('select-grupo-eval');
-    if (!selEval) return;
-    var g = selEval.value;
-    var res = calcMediaRanking();
-    if (!appState.pontuacoes) appState.pontuacoes = {};
-    var atual = appState.pontuacoes[g] || { fund: 0, viab: 0, saldo: 10, bonusBoss: 0 };
-    appState.pontuacoes[g] = Object.assign({}, atual, { qualidadeBanca: limitar(document.getElementById('pilar-pitch-qualidade').value,0,20), pitchAvaliado:true, pitch: res.pitchFinal, total: res.total });
-    guardarEstado();
-    renderRanking();
-    avisoTemporario('Nota salva para ' + g + '!');
-  }
-
   function renderRanking() {
     var tbody = document.getElementById('tbody-ranking');
     if (!tbody) return;
@@ -2324,13 +2308,13 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       var p = (appState.pontuacoes && appState.pontuacoes[g]) || { fund: 0, viab: 0, pitch: 0, saldo: 0, total: 0 };
       var acumulado = hist.reduce(function(soma,h) { return soma + Number((h.placar[g] || {}).total || 0); },0);
       var atual = appState.rodadaSalva ? 0 : Number(p.total || 0);
-      return { grupo:g, auto:(Number(p.fund)||0)+(Number(p.viab)||0)+(Number(p.saldo)||0), pitch:Number(p.pitch)||0, rodada:atual, total:acumulado+atual };
+      return { grupo:g, auto:(Number(p.fund)||0)+(Number(p.viab)||0)+(Number(p.saldo)||0), rodada:atual, total:acumulado+atual };
     });
     lista.sort(function(a,b) { return b.total - a.total; });
     var botaoPodio=document.getElementById('btn-rever-podio');
     if(botaoPodio)botaoPodio.style.display=(hist.length===6||appState.competicaoEncerrada)?'block':'none';
     tbody.innerHTML = lista.map(function(item, idx) {
-      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.auto + ' pts</td><td>' + item.pitch + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' / 600 pts</strong></td></tr>';
+      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.rodada + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' / 600 pts</strong></td></tr>';
     }).join('');
   }
 
@@ -2349,6 +2333,8 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         renderGerenciarMensagensMestre();
         renderRanking();
         renderHistoricoTendencias();
+        renderAuditoriaCyber();
+        renderAvaliacaoFinalCyber();
       } else if (active.id === 'screen-grupo') {
         if (grupoAtivo) {
           var headerNome = document.getElementById('grupo-header-nome');
@@ -2422,7 +2408,19 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       var i=String(cyberTeamIndex+1),g=(appState.grupos||[])[cyberTeamIndex];
       if(!g)return;
       var privado=cyberPrivateFor(g,appState);
-      window.rtdbSet(window.rtdbRef(window.db,CYBER_BASE+'/equipes/'+i),privado).catch(function(e){console.error(e);cyberAlert('Não foi possível salvar a resposta.');});
+      var destino=window.rtdbRef(window.db,CYBER_BASE+'/equipes/'+i);
+      if(privado.decisoes && !((cyberPrivateState[i]||{}).decisoes)) {
+        window.rtdbRunTransaction(destino,function(anterior){
+          if(anterior && anterior._rodadaId===privado._rodadaId && anterior.decisoes)return;
+          if(anterior && anterior._rodadaId===privado._rodadaId && anterior._teamIndex && Number(anterior._teamIndex)!==Number(i))return;
+          var combinado=Object.assign({},anterior||{},privado);if(anterior && Array.isArray(anterior.historicoDecisoesGrupos) && (!privado.historicoDecisoesGrupos || anterior.historicoDecisoesGrupos.length>privado.historicoDecisoesGrupos.length))combinado.historicoDecisoesGrupos=anterior.historicoDecisoesGrupos;return combinado;
+        },{applyLocally:false}).then(function(r){if(!r.committed)cyberAlert('Resposta já enviada para esta rodada; duplicação bloqueada.');}).catch(function(e){console.error(e);cyberAlert('Falha ao registrar decisão da equipe.');});
+      } else {
+        window.rtdbRunTransaction(destino,function(anterior){
+          if(anterior && anterior._rodadaId===privado._rodadaId && anterior.decisoes)return anterior;
+          var combinado=Object.assign({},anterior||{},privado);if(anterior && Array.isArray(anterior.historicoDecisoesGrupos) && (!privado.historicoDecisoesGrupos || anterior.historicoDecisoesGrupos.length>privado.historicoDecisoesGrupos.length))combinado.historicoDecisoesGrupos=anterior.historicoDecisoesGrupos;return combinado;
+        },{applyLocally:false}).catch(function(e){console.error(e);cyberAlert('Falha ao sincronizar dados da equipe.');});
+      }
       cyberPrivateState[i]=JSON.parse(JSON.stringify(privado));
       // Dados públicos, como pontuação e orçamento, só podem ser escritos pelo Mestre.
     }
@@ -2487,14 +2485,14 @@ function listen(role,idx){
 const resultadosEmPublicacao=new Set();
 async function publicarResultadoPendente(i,d){
  if(!d || !d.decisoes || !d.resultadoCalculado || !d.resultadoCalculado.pontuacao || !cyberPublicState)return;
- if(String(d._rodadaId||'')!==String(cyberPublicState.identificadorSorteioAtual||''))return;
+ if(String(d._rodadaId||'')!==String(cyberPublicState.identificadorSorteioAtual||'') || cyberPublicState.rodadaSalva || cyberPublicState.competicaoEncerrada)return;
  const g=(cyberPublicState.grupos||[])[i-1];if(!g)return;
  const r=d.resultadoCalculado, chave=String(i)+':'+String(d._rodadaId);
  if(resultadosEmPublicacao.has(chave))return;
  // A validação definitiva dos cálculos deve ocorrer no servidor (Cloud Functions).
  // Este modo é provisório e requer o Mestre conectado.
  const existente=((cyberPublicState.pontuacoes||{})[g]);
- if(existente && (existente.pitchAvaliado || (Number(existente.total)===Number(r.pontuacao.total) && Number((cyberPublicState.orcamentosGrupos||{})[g])===Number(r.orcamento))))return;
+ if(existente && Number(existente.total)===Number(r.pontuacao.total) && Number((cyberPublicState.orcamentosGrupos||{})[g])===Number(r.orcamento))return;
  resultadosEmPublicacao.add(chave);
  const alteracoes={};
  alteracoes['pontuacoes/'+g]=r.pontuacao;
