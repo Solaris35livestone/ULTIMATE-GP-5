@@ -510,6 +510,9 @@ select:disabled, input:disabled, textarea:disabled { color: #cbd5e1 !important; 
 input::placeholder, textarea::placeholder { color: #9daec8; opacity: 1; }
 input:-webkit-autofill { -webkit-text-fill-color: #f8fafc !important; -webkit-box-shadow: 0 0 0 1000px #101a32 inset !important; }
 
+
+/* Interface limpa: ocultar legendas instrutivas redundantes sob controles */
+#aviso-cadastro-equipes, #aviso-modelo-carta, #timer-stage-info { display:none !important; }
 </style>
 <style>
 
@@ -678,6 +681,7 @@ body { overflow-x:hidden; }
       <button id="tab-btn-mestre-ranking" class="tab-btn" onclick="switchMestreTab('mestre-ranking')">5. Placar Final &amp; Análise</button>
     </div>
 
+<div class="card" style="padding:10px 14px;border-left:3px solid var(--cyan);margin:10px 0"><strong>🎓 Missão GP5:</strong> defender decisões salariais com base em responsabilidades, equidade e orçamento.</div>
     <!-- TAB 1: CADASTRO E SORTEIO -->
     <div id="mestre-setup" class="mestre-tab-content">
       <div class="grid">
@@ -724,13 +728,23 @@ body { overflow-x:hidden; }
     <div id="mestre-comunicados" class="mestre-tab-content" style="display:none;">
       <div class="grid">
         <div class="card">
-          <h3 class="title" style="font-size:1.1rem;">Enviar Orientação / Aviso</h3>
+          <h3 class="title" style="font-size:1.1rem;">Enviar comunicado</h3>
           <div class="form-group">
             <label for="select-destinatario-msg">Destinatário:</label>
             <select id="select-destinatario-msg"></select>
           </div>
+          <div class="form-group" id="orientacao-extra-box">
+            <label for="tipo-orientacao-extra">Orientação extra (opcional):</label>
+            <select id="tipo-orientacao-extra" onchange="prepararOrientacaoExtra()">
+              <option value="">Mensagem livre</option>
+              <option value="dados">Dados complementares da crise</option>
+              <option value="pergunta">Pergunta de investigação</option>
+              <option value="restricao">Alerta de restrição</option>
+            </select>
+            <div id="orientacao-extra-status" style="font-size:.78rem;color:var(--cyan);margin-top:5px" aria-live="polite"></div>
+          </div>
           <div class="form-group">
-            <label for="texto-msg">Orientação Técnica / Regra Extra:</label>
+            <label for="texto-msg">Mensagem:</label>
             <textarea id="texto-msg" rows="3"></textarea>
           </div>
           <button class="btn" onclick="enviarMensagemMestre()">Enviar Comunicado</button>
@@ -751,7 +765,7 @@ body { overflow-x:hidden; }
         <label for="stage-timer-select">Etapa</label>
         <select id="stage-timer-select" onchange="setMasterTimerStage()">
           <option value="deliberacao">1. Deliberação — 15 minutos</option>
-          <option value="debriefing">2. Debriefing — 15 minutos</option>
+          <option value="debriefing">2. Debriefing — 10 minutos</option>
         </select>
         <p id="timer-stage-info" class="subtitle" style="margin-top:10px">Começa automaticamente após a última carta ser distribuída.</p>
         <div class="timer" id="display-master-timer">15:00</div>
@@ -769,7 +783,7 @@ body { overflow-x:hidden; }
     <div id="mestre-ranking" class="mestre-tab-content" style="display:none;">
       <div class="grid">
         <div class="card">
-          <h3 class="title" style="font-size:1.1rem;">Ranking Acumulado (até 600 pontos)</h3>
+          <h3 class="title" style="font-size:1.1rem;">Ranking Acumulado (até 300 pontos)</h3>
           <table>
             <thead>
               <tr><th>Pos.</th><th>Equipe</th><th>Pontos da rodada</th><th>Total acumulado</th></tr>
@@ -782,14 +796,31 @@ body { overflow-x:hidden; }
           <button id="btn-rever-podio" class="btn btn-sec" style="display:none;width:100%;margin-top:12px" onclick="mostrarPodioFinal()">🏆 Ver pódio final e comemoração</button>
           </div>
           <button class="btn btn-danger" style="width:100%;margin-top:12px" onclick="encerrarCompeticaoAntecipadamente()">🏁 Encerrar competição e abrir pódio</button>
-          <p style="font-size:.76rem;color:var(--text-muted);margin-top:6px">Pode ser usado antes da 6ª rodada. Considera apenas rodadas salvas e resultados já registrados.</p>
+          
         </div>
       </div>
 
+      <div class="card" style="margin-top:16px" id="cyber-avaliacao-manual">
+        <h3 class="title">Avaliação do Mestre</h3>
+        <label for="cyber-avaliacao-equipe">Equipe</label>
+        <select id="cyber-avaliacao-equipe"></select>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-top:10px">
+          <label>Fundamentação (0–40)<input id="cyber-nota-fund" type="number" min="0" max="40" step="1" value="0"></label>
+          <label>Equidade e cargos (0–30)<input id="cyber-nota-equidade" type="number" min="0" max="30" step="1" value="0"></label>
+          <label>Viabilidade (0–20)<input id="cyber-nota-viab" type="number" min="0" max="20" step="1" value="0"></label>
+          <label>Coerência (0–10)<input id="cyber-nota-coerencia" type="number" min="0" max="10" step="1" value="0"></label>
+        </div>
+        <button class="btn" style="margin-top:12px" onclick="salvarAvaliacaoMestreCyber()">Salvar avaliação</button>
+        <p id="cyber-avaliacao-status" style="margin-top:8px" aria-live="polite"></p>
+      </div>
       <div class="card" style="margin-top:16px">
         <h3 class="title">🛡️ Auditoria da rodada</h3>
         <div id="cyber-auditoria" aria-live="polite"></div>
         <div class="btn-group"><button class="btn btn-sec" onclick="exportarRelatorioCyber()">📥 Exportar relatório CSV</button><button class="btn btn-sec" onclick="exportarRelatorioHTML()">📄 Relatório para impressão</button></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3 class="title">🧭 Parecer dos consultores — acesso do Mestre</h3>
+        <div id="mestre-guias-consultores"></div>
       </div>
       <div class="card" style="margin-top:16px">
         <h3 class="title">🎓 Avaliação pedagógica final</h3>
@@ -826,6 +857,7 @@ body { overflow-x:hidden; }
     <div class="nav-tabs">
       <button id="tab-grupo-decisao" class="tab-btn active" onclick="switchGrupoTab('decisao')">⚔️ Combate &amp; Resolução</button>
       <button id="tab-grupo-historico" class="tab-btn" onclick="switchGrupoTab('historico')">📜 Meu Histórico</button>
+      <button id="tab-grupo-missoes" class="tab-btn" onclick="switchGrupoTab('missoes')">🎯 Missão da Crise</button>
       <button id="tab-grupo-orientacoes" class="tab-btn" onclick="switchGrupoTab('orientacoes')">📢 Comunicados</button>
     </div>
 
@@ -865,7 +897,7 @@ body { overflow-x:hidden; }
             </div>
 
             <div class="form-group">
-              <label for="decisao-justificativa-pitch">Justificativa escrita da equipe:</label>
+              <label for="decisao-justificativa-pitch">Justificativa da equipe (mínimo 80 caracteres):</label>
               <textarea id="decisao-justificativa-pitch" rows="3" placeholder="Resuma a lógica da equipe..."></textarea>
             </div>
 
@@ -887,6 +919,14 @@ body { overflow-x:hidden; }
         <div id="container-historico-pessoal-grupo">
           <p class="subtitle">Nenhuma decisão submetida ainda.</p>
         </div>
+      </div>
+    </div>
+
+    <!-- MISSÃO AUTOMÁTICA: INDEPENDENTE DE COMUNICADOS -->
+    <div id="grupo-tab-content-missoes" class="grupo-tab-pane" style="display:none;">
+      <div class="card">
+        <h3 class="title" style="font-size:1.1rem;">🎯 Missão da Crise</h3>
+        <div id="container-missao-crise-grupo"></div>
       </div>
     </div>
 
@@ -1013,13 +1053,13 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       titulo: 'Carta 01 — Giga-Bug dos Juniores',
       setor: 'Tecnologia da Informação',
       ameaca: 'AMEAÇA: Risco de demissão coletiva dos Plenos.',
-      desc: 'Novos Juniores contratados a R$ 5.500,00. Plenos antigos que os treinam recebem R$ 5.200,00.',
+      desc: 'Na NexaTech, 4 analistas juniores recém-contratados recebem R$ 5.500/mês e 6 plenos recebem R$ 5.200/mês. Juniores executam tarefas supervisionadas (1 ano de experiência); plenos diagnosticam falhas críticas, orientam juniores e têm autonomia operacional (3 anos de experiência). Três plenos reclamaram. Elevar os 6 plenos para R$ 6.000 custa R$ 4.800/mês adicionais, antes de encargos. A diretoria exige plano de enquadramento e controle da folha.',
       consultoresPermitidos: ['Carlos (Equidade Interna)', 'Guilherme (Controller)'],
       q1: 'Qual ação imediata deve ser tomada sem estourar a folha anual?',
       opts1: [
         { texto: 'Reequilibrar a faixa: Promover/ajustar os Plenos por alinhamento e corrigir o piso de entrada dos Juniores.', ptsFund: 40, ptsViab: 30, ideal: true },
         { texto: 'Conceder aumento geral de 15% para toda a empresa para acalmar os ânimos.', ptsFund: 15, ptsViab: 10, ideal: false },
-        { texto: 'Ignorar as reclamações dos Plenos e manter os salários como estão.', ptsFund: 0, ptsViab: 0, ideal: false },
+        { texto: 'Manter temporariamente os valores, abrir auditoria de cargos em 30 dias e comunicar prazo e critérios de decisão.', ptsFund: 0, ptsViab: 0, ideal: false },
         { texto: 'Revisar salários por prioridade, corrigindo primeiro as distorções mais críticas após análise financeira.', ptsFund: 30, ptsViab: 25, ideal: false }
       ],
       q2: 'Como reformular a tabela salarial para impedir esta distorção?',
@@ -1037,19 +1077,19 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       titulo: 'Carta 02 — Leviatã da Escala Operacional',
       setor: 'Logística e Operações',
       ameaca: 'AMEAÇA: Quebra na hierarquia e recusa de liderança.',
-      desc: 'Reajuste de 12% do sindicato fez Operadores I ganharem o mesmo que Supervisores de Operações.',
+      desc: 'Na LogiMax, 20 operadores recebiam R$ 3.000/mês e passaram a R$ 3.360 após reajuste coletivo de 12%. Quatro supervisores continuam com R$ 3.900/mês. Operadores executam movimentação e controle de materiais conforme procedimentos; supervisores lideram equipes, respondem por segurança e indicadores, com maior autonomia. A diferença caiu de 30% para 16,1%. Reenquadrar os 4 supervisores para R$ 4.400 custa R$ 2.000/mês adicionais, antes de encargos. A decisão deve respeitar o reajuste já aplicado e avaliar cargos, não um percentual fixo de hierarquia.',
       consultoresPermitidos: ['Luiza (Trilha Carreira)', 'Ana Jully (Consultora Legal)'],
       q1: 'Como reajustar a faixa salarial dos Supervisores sem estender 12% a toda a empresa?',
       q2: 'Quais critérios não financeiros podem recompor a atratividade do cargo?',
       opts1: [
-        { texto: 'Reestruturar o piso dos Supervisores com diferencial mínimo de 15% a 20% sobre subordinados.', ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: 'Rever o enquadramento dos supervisores segundo responsabilidades e dados salariais, com implantação escalonada.', ptsFund: 40, ptsViab: 30, ideal: true },
         { texto: 'Repassar o reajuste linear de 12% a todos os cargos da empresa.', ptsFund: 10, ptsViab: 5, ideal: false },
         { texto: 'Realizar estudo de avaliação de cargos e corrigir progressivamente as diferenças justificadas de responsabilidade.', ptsFund: 35, ptsViab: 27, ideal: false },
         { texto: 'Retirar benefícios já previstos dos operadores para restabelecer a diferença salarial.', ptsFund: 5, ptsViab: 0, ideal: false }
       ],
       opts2: [
         { texto: 'Oferecer aceleração de carreira, capacitação executiva e benefícios de gestão.', ptsFund: 40, ptsViab: 30, ideal: true },
-        { texto: 'Manter Supervisores sem benefícios adicionais.', ptsFund: 0, ptsViab: 0, ideal: false },
+        { texto: 'Oferecer desenvolvimento técnico e autonomia, mas adiar qualquer revisão das faixas por seis meses.', ptsFund: 0, ptsViab: 0, ideal: false },
         { texto: 'Formalizar trilhas de desenvolvimento, autonomia e reconhecimento vinculados às responsabilidades de supervisão.', ptsFund: 35, ptsViab: 25, ideal: false },
         { texto: 'Prometer promoções futuras sem critérios nem prazos definidos.', ptsFund: 10, ptsViab: 10, ideal: false }
       ]
@@ -1061,7 +1101,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       titulo: 'Carta 03 — Dança das Cadeiras',
       setor: 'Serviços Financeiros / Fintech',
       ameaca: 'AMEAÇA: Fuga de talentos críticos.',
-      desc: 'Concorrente ofereceu +40% de salário para Analistas de Riscos Seniores. Três já saíram.',
+      desc: 'Na fintech Vértice, 8 analistas de riscos seniores recebiam R$ 7.000/mês; 3 já saíram após oferta concorrente de R$ 9.800 (+40%). Restam 5 profissionais que monitoram risco de crédito, validam modelos e orientam analistas plenos. A folha atual dos 5 é R$ 35.000/mês. Cobrir +40% para todos custaria R$ 14.000/mês adicionais, antes de encargos; a diretoria dispõe de até R$ 7.000/mês adicionais para medidas imediatas. A empresa ainda não validou se a oferta representa a mediana do mercado.',
       consultoresPermitidos: ['Anna (Pesquisa Mercado)', 'Guilherme (Controller)'],
       q1: 'A empresa deve cobrir a proposta para todos os restantes? Justifique.',
       q2: 'Qual plano de retenção emergencial pode ser criado em 48h?',
@@ -1069,85 +1109,64 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         { texto: 'Análise de Matriz Crítica: Cobrir proposta (match) apenas para talentos essenciais/chave.', ptsFund: 40, ptsViab: 30, ideal: true },
         { texto: 'Dar contraproposta generalizada de +40% para 100% da equipe.', ptsFund: 15, ptsViab: 10, ideal: false },
         { texto: 'Revisar a competitividade da faixa de seniores e oferecer ajustes seletivos baseados em mercado e criticidade.', ptsFund: 35, ptsViab: 27, ideal: false },
-        { texto: 'Não avaliar o mercado e substituir todos os profissionais que pedirem aumento.', ptsFund: 5, ptsViab: 5, ideal: false }
+        { texto: 'Concentrar recursos na contratação de substitutos e adiar contrapropostas até concluir pesquisa de mercado.', ptsFund: 5, ptsViab: 5, ideal: false }
       ],
       opts2: [
         { texto: 'Criar Bônus de Permanência (Retention Bonus) atrelado a metas de médio prazo e benefícios flexíveis.', ptsFund: 40, ptsViab: 30, ideal: true },
-        { texto: 'Oferecer apenas folga de aniversário.', ptsFund: 5, ptsViab: 5, ideal: false },
+        { texto: 'Oferecer flexibilidade de jornada e capacitação sem alteração salarial imediata.', ptsFund: 5, ptsViab: 5, ideal: false },
         { texto: 'Oferecer plano de carreira, desenvolvimento e revisão salarial programada para funções críticas.', ptsFund: 35, ptsViab: 27, ideal: false },
         { texto: 'Exigir compromisso informal de permanência sem contrapartida concreta.', ptsFund: 5, ptsViab: 0, ideal: false }
       ]
     },
     {
-      id: 'c4',
-      categoria: 'Atração e Retenção',
-      emoji: '🏡',
-      titulo: 'Carta 04 — Dilema do Home Office',
-      setor: 'Marketing Digital',
-      ameaca: 'AMEAÇA: Demissão em massa (60% da equipa).',
-      desc: 'A diretoria exige trabalho 100% presencial, mas o mercado oferece vagas remotas/híbridas.',
-      consultoresPermitidos: ['Ana Jully (Consultora Legal)', 'Anna (Pesquisa Mercado)'],
-      q1: 'Como mediar o impasse entre Diretoria e colaboradores?',
-      q2: 'Proponha um pacote de benefícios/flexibilidade que reduza o turnover.',
-      opts1: [
-        { texto: 'Negociar Modelo Híbrido baseado em entregas (ex: 2x presencial, 3x remoto) com dados de produtividade.', ptsFund: 40, ptsViab: 30, ideal: true },
-        { texto: 'Aceitar a imposição 100% presencial da Diretoria sem questionar.', ptsFund: 5, ptsViab: 0, ideal: false },
-        { texto: 'Propor projeto-piloto híbrido com indicadores e revisão conjunta com a diretoria.', ptsFund: 35, ptsViab: 28, ideal: false },
-        { texto: 'Permitir home office somente para alguns funcionários, sem critérios transparentes.', ptsFund: 15, ptsViab: 10, ideal: false }
+      id: "c4", categoria: "Avaliação de cargos", emoji: "🧩", titulo: "Carta 04 — O Cargo Fantasma", setor: "Indústria", ameaca: "AMEAÇA: Dois setores disputam o mesmo enquadramento salarial.",
+      desc: "Na IndusPrime, a Analista de Qualidade recebe R$ 4.600 e investiga falhas, aprova laudos e pode interromper lotes. O Analista Administrativo recebe R$ 5.400 e prepara relatórios e controla contratos sob aprovação do gerente. Ambos têm graduação e 3 anos de experiência. O RH classificou os dois no mesmo nível sem avaliar autonomia, impacto e complexidade. A diretoria dispõe de R$ 1.500/mês para corrigir distorções, sem encargos.",
+      consultoresPermitidos: ["Carlos (Equidade Interna)", "Luiza (Trilha Carreira)"],
+      q1: "Como determinar se os cargos devem ficar na mesma faixa?", opts1: [
+        { texto: "Avaliar responsabilidades, autonomia, conhecimento e impacto antes de definir o enquadramento.", ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: "Igualar os salários imediatamente, sem examinar as atividades.", ptsFund: 15, ptsViab: 10, ideal: false },
+        { texto: "Manter provisoriamente o enquadramento e solicitar avaliação externa independente antes de qualquer ajuste.", ptsFund: 0, ptsViab: 5, ideal: false },
+        { texto: "Fazer entrevistas e comparar as descrições antes de corrigir a faixa prioritária.", ptsFund: 35, ptsViab: 28, ideal: false }
       ],
-      opts2: [
-        { texto: 'Implementar Auxílio Home Office e Cartão de Benefícios Flexíveis.', ptsFund: 40, ptsViab: 30, ideal: true },
-        { texto: 'Não oferecer flexibilidade nem benefícios adicionais.', ptsFund: 0, ptsViab: 0, ideal: false },
-        { texto: 'Criar pacote flexível de benefícios após pesquisa com colaboradores e análise de custos.', ptsFund: 35, ptsViab: 27, ideal: false },
-        { texto: 'Oferecer um benefício único de baixo uso sem consultar as necessidades da equipe.', ptsFund: 10, ptsViab: 10, ideal: false }
+      q2: "Como impedir classificações arbitrárias de cargos?", opts2: [
+        { texto: "Adotar descrições atualizadas, avaliação por fatores e revisão formal de enquadramentos.", ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: "Criar famílias de cargos e bandas amplas, com revisão apenas quando houver mudança formal de função.", ptsFund: 5, ptsViab: 5, ideal: false },
+        { texto: "Deixar cada gerente escolher livremente a faixa de sua equipe.", ptsFund: 5, ptsViab: 5, ideal: false },
+        { texto: "Criar comitê de avaliação e revisar casos com mudanças relevantes de função.", ptsFund: 35, ptsViab: 28, ideal: false }
       ]
     },
     {
-      id: 'c5',
-      categoria: 'Negociação Sindical',
-      emoji: '⚖️',
-      titulo: 'Carta 05 — A Greve Iminente',
-      setor: 'Manufatura Eletrônica',
-      ameaca: 'AMEAÇA: Paralisação da fábrica.',
-      desc: 'Sindicato exige redução de jornada de 44h para 40h sem redução salarial.',
-      consultoresPermitidos: ['Ana Jully (Consultora Legal)', 'Guilherme (Controller)'],
-      q1: 'Quais contrapropostas flexíveis apresentar?',
-      q2: 'Como estruturar a comunicação interna para evitar o pânico?',
-      opts1: [
-        { texto: 'Troca estruturada: Redução gradual de jornada atrelada a metas de produtividade e Banco de Horas.', ptsFund: 40, ptsViab: 30, ideal: true },
-        { texto: 'Ceder totalmente às exigências do sindicato sem contrapartida operacional.', ptsFund: 10, ptsViab: 5, ideal: false },
-        { texto: 'Negociar cronograma de redução de jornada com avaliação de custos, produtividade e instrumento coletivo adequado.', ptsFund: 35, ptsViab: 27, ideal: false },
-        { texto: 'Encerrar a negociação unilateralmente e ameaçar quem aderir à paralisação.', ptsFund: 0, ptsViab: 0, ideal: false }
+      id: "c5", categoria: "Remuneração variável", emoji: "🎯", titulo: "Carta 05 — O Bônus que Virou Armadilha", setor: "Comercial", ameaca: "AMEAÇA: O programa de bônus recompensa volume, mas incentiva vendas com prejuízo.",
+      desc: "Na NovaVendas, 8 vendedores recebem salário fixo de R$ 3.200 e bônus de 5% sobre o faturamento individual. Um vendedor faturou R$ 100.000 com margem de 4%; outro faturou R$ 80.000 com margem de 25%. O primeiro receberia bônus de R$ 5.000, apesar de gerar margem bruta de R$ 4.000; o segundo receberia R$ 4.000 e gerou margem de R$ 20.000. A diretoria quer rever a regra sem alterar retroativamente direitos já adquiridos.",
+      consultoresPermitidos: ["Guilherme (Controller)", "Anna (Pesquisa Mercado)"],
+      q1: "Como reagir ao incentivo que premia vendas pouco rentáveis?", opts1: [
+        { texto: "Honrar regras já devidas e redesenhar o bônus futuro com metas de margem, qualidade e resultados.", ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: "Cancelar unilateralmente todos os bônus já apurados.", ptsFund: 0, ptsViab: 0, ideal: false },
+        { texto: "Manter a comissão de 5% por um ciclo e acrescentar um limite de bonificação por contrato enquanto testa nova fórmula.", ptsFund: 5, ptsViab: 0, ideal: false },
+        { texto: "Simular uma nova fórmula e negociá-la para ciclos futuros, com critérios claros.", ptsFund: 35, ptsViab: 28, ideal: false }
       ],
-      opts2: [
-        { texto: 'Comunicação transparente com boletins informativos e diálogo constante com líderes.', ptsFund: 40, ptsViab: 30, ideal: true },
-        { texto: 'Manter sigilo absoluto e proibir conversas sobre a greve.', ptsFund: 5, ptsViab: 5, ideal: false },
-        { texto: 'Organizar reuniões periódicas com lideranças, perguntas frequentes e atualização do andamento das negociações.', ptsFund: 35, ptsViab: 27, ideal: false },
-        { texto: 'Divulgar informações não confirmadas para pressionar os empregados contra o sindicato.', ptsFund: 0, ptsViab: 0, ideal: false }
+      q2: "Como estruturar remuneração variável coerente e sustentável?", opts2: [
+        { texto: "Definir indicadores equilibrados, limites de custo, regras transparentes e revisão periódica.", ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: "Pagar bônus apenas pela quantidade de contratos, sem analisar resultado.", ptsFund: 10, ptsViab: 5, ideal: false },
+        { texto: "Adotar um bônus misto por receita e avaliação gerencial, sujeito a auditoria semestral.", ptsFund: 0, ptsViab: 0, ideal: false },
+        { texto: "Testar metas de margem e satisfação do cliente com acompanhamento financeiro.", ptsFund: 35, ptsViab: 28, ideal: false }
       ]
     },
     {
-      id: 'c6',
-      categoria: 'Negociação Sindical e CLT',
-      emoji: '💰',
-      titulo: 'Carta 06 — Bonificação Desgovernada',
-      setor: 'Comercial e Vendas',
-      ameaca: 'AMEAÇA: Passivo trabalhista e equiparação salarial.',
-      desc: 'Gerentes pagam comissões informais "por fora" para bater metas, gerando riscos legais.',
-      consultoresPermitidos: ['Ana Jully (Consultora Legal)', 'Guilherme (Controller)'],
-      q1: 'Como regularizar as bonificações perante a CLT (Art. 457)?',
-      q2: 'Como desenhar uma política clara de Remuneração Variável?',
-      opts1: [
-        { texto: 'Anulação do pagamento informal e formalização imediata da política de Prêmios (Art. 457 da CLT).', ptsFund: 40, ptsViab: 30, ideal: true },
-        { texto: 'Manter o pagamento por fora ajustando apenas o valor verbalmente.', ptsFund: 0, ptsViab: 0, ideal: false },
-        { texto: 'Auditar pagamentos anteriores, avaliar os reflexos trabalhistas e formalizar corretamente as parcelas remuneratórias.', ptsFund: 35, ptsViab: 28, ideal: false },
-        { texto: 'Apenas renomear as comissões informais como prêmios sem mudar os critérios ou registros.', ptsFund: 10, ptsViab: 5, ideal: false }
+      id: "c6", categoria: "Avaliação de cargos e promoção", emoji: "🚀", titulo: "Carta 06 — O Labirinto das Promoções", setor: "Indústria", ameaca: "AMEAÇA: Promoções sem critérios provocam acusações de favoritismo.",
+      desc: "Na IndusPrime, 4 assistentes administrativos recebem R$ 2.800 (rotinas padronizadas), 3 analistas recebem R$ 4.200 (análises e relatórios com autonomia) e 2 supervisores recebem R$ 5.800 (gestão de pessoas e indicadores). Um assistente com 1 ano foi promovido diretamente a supervisor por indicação, sem descrição do novo cargo; uma analista com 5 anos e liderança de projetos foi preterida. A promoção elevará o salário do assistente em R$ 3.000/mês; orçamento disponível para ajustes: R$ 4.500/mês.",
+      consultoresPermitidos: ["Luiza (Trilha Carreira)", "Guilherme (Controller)"],
+      q1: "Como responder à promoção contestada?", opts1: [
+        { texto: "Suspender o enquadramento definitivo até verificar requisitos, atribuições e critérios, preservando direitos já constituídos.", ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: "Promover imediatamente todos os assistentes a supervisores.", ptsFund: 10, ptsViab: 0, ideal: false },
+        { texto: "Manter a promoção provisoriamente, com auditoria posterior e divulgação dos critérios de avaliação.", ptsFund: 0, ptsViab: 5, ideal: false },
+        { texto: "Auditar os cargos e criar transição documentada com análise dos impactos financeiros.", ptsFund: 35, ptsViab: 28, ideal: false }
       ],
-      opts2: [
-        { texto: 'Regulamentar Padrões de Desempenho e estender metas bônus com regras claras.', ptsFund: 40, ptsViab: 30, ideal: true },
-        { texto: 'Deixar a critério informal de cada gerente regional.', ptsFund: 0, ptsViab: 0, ideal: false },
-        { texto: 'Definir indicadores verificáveis, elegibilidade, periodicidade e auditoria dos pagamentos variáveis.', ptsFund: 35, ptsViab: 28, ideal: false },
-        { texto: 'Distribuir bônus iguais a todos, sem critérios de desempenho ou previsão orçamentária.', ptsFund: 15, ptsViab: 12, ideal: false }
+      q2: "Como estruturar promoções justas e financeiramente sustentáveis?", opts2: [
+        { texto: "Definir descrições de cargos, matriz de senioridade, critérios de promoção e faixas salariais.", ptsFund: 40, ptsViab: 30, ideal: true },
+        { texto: "Combinar indicação gerencial e avaliação por competências, com validação por comitê.", ptsFund: 0, ptsViab: 0, ideal: false },
+        { texto: "Promover somente por antiguidade sem avaliar atribuições.", ptsFund: 15, ptsViab: 15, ideal: false },
+        { texto: "Estabelecer comitê de promoções com evidências, comunicação e orçamento.", ptsFund: 35, ptsViab: 28, ideal: false }
       ]
     }
   ];
@@ -1424,7 +1443,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   async function reiniciarRodada() {
     if(appState.competicaoEncerrada){cyberAlert("A competição foi encerrada. Reinicie a competição para jogar novamente.");return;}
     var concluidas = (appState.historicoRodadas || []).length;
-    if (concluidas >= 6) { cyberAlert('As seis rodadas já foram concluídas. Consulte o ranking final.'); return; }
+    if (concluidas >= 3) { cyberAlert('As três rodadas já foram concluídas. Consulte o ranking final.'); return; }
     if (!appState.rodadaSalva && Object.keys(appState.crises || {}).length) {
       cyberAlert('Antes de avançar, registre a pontuação da rodada atual em “Salvar Rodada”.'); return;
     }
@@ -1511,7 +1530,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
 
   function sortearCartas() {
-    if ((appState.historicoRodadas || []).length >= 6) { cyberAlert('Limite de seis rodadas atingido.'); return; }
+    if ((appState.historicoRodadas || []).length >= 3) { cyberAlert('Limite de três rodadas atingido.'); return; }
     if (appState.rodadaSalva) { cyberAlert('Clique em “Nova Rodada” antes de sortear novamente.'); return; }
     if (Object.keys(appState.crises || {}).length) { cyberAlert('Já existem cartas sorteadas nesta rodada.'); return; }
     if (!appState.cartasSorteadasPorGrupo) appState.cartasSorteadasPorGrupo = {};
@@ -1573,7 +1592,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
 
 
   function rankingFinalConcluido() {
-    if ((appState.historicoRodadas || []).length !== 6 && !appState.competicaoEncerrada) return [];
+    if ((appState.historicoRodadas || []).length !== 3 && !appState.competicaoEncerrada) return [];
     var hist = appState.historicoRodadas || [];
     var lista = (appState.grupos || []).map(function(g) {
       var salvo = hist.reduce(function(s,h){return s + Number(((h.placar || {})[g] || {}).total || 0);},0);
@@ -1659,7 +1678,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
             <path d="M68 88 Q80 98 92 88" fill="none" stroke="var(--cor)" stroke-width="4" stroke-linecap="round"/>
             <ellipse cx="40" cy="85" rx="8" ry="5" fill="#ff8bc6" opacity=".55"/><ellipse cx="120" cy="85" rx="8" ry="5" fill="#ff8bc6" opacity=".55"/>
           ${figurinoCyber(Math.max(0,lista.indexOf(item)))}</svg></div></div>`+
-        '<div class="podio-nome">'+escaparHTML(item.grupo)+'</div><div class="podio-pontos">'+item.total+' / 600 pts</div>'+
+        '<div class="podio-nome">'+escaparHTML(item.grupo)+'</div><div class="podio-pontos">'+item.total+' / 300 pts</div>'+
         '<div class="podio-base">'+medalha+' '+item.posicao+'º</div></div>';
     }).join('');
     outros.innerHTML=lista.slice(3).map(function(item,i){return '<div class="podio-extra" style="--atraso:'+(1+i*.15)+'s">🎉 '+item.posicao+'º — '+escaparHTML(item.grupo)+' <strong>'+item.total+' pts</strong></div>';}).join('');
@@ -1681,7 +1700,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   function salvarRodadaNoHistorico() {
     if(appState.competicaoEncerrada){cyberAlert('A competição já foi encerrada.');return;}
     if (appState.rodadaSalva) { cyberAlert('Esta rodada já foi salva.'); return; }
-    if ((appState.historicoRodadas || []).length >= 6) { cyberAlert('Limite de seis rodadas atingido.'); return; }
+    if ((appState.historicoRodadas || []).length >= 3) { cyberAlert('Limite de três rodadas atingido.'); return; }
     if (!appState.grupos.every(function(g) { return !!(appState.decisoes && appState.decisoes[g] && appState.pontuacoes && appState.pontuacoes[g] ); })) {
       cyberAlert('Todas as equipes devem submeter as respostas antes de salvar a rodada.'); return;
     }
@@ -1695,6 +1714,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       cyberAlert('Aguarde a sincronização das respostas originais antes de salvar. Pendentes: ' + faltantes.join(', '));
       return;
     }
+    if (!appState.grupos.every(function(g){return !!((appState.pontuacoes||{})[g]||{}).avaliadoPeloMestre;})){cyberAlert('Avalie todas as equipes antes de salvar a rodada.');return;}
     if (!appState.historicoRodadas) appState.historicoRodadas = [];
     var num = appState.historicoRodadas.length + 1;
     var dados = { idRodada: String(appState.identificadorSorteioAtual||''), rodada: num, dataISO:new Date().toISOString(), hora: new Date().toLocaleTimeString(), placar: {}, cartasRodada: {}, decisoesRodada: {} };
@@ -1710,8 +1730,8 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     guardarEstado();
     renderHistoricoTendencias();
     renderRanking();
-    avisoTemporario('Rodada ' + num + ' de 6 salva! ' + (num === 6 ? 'Partida concluída!' : 'Clique em Nova Rodada para continuar.'));
-    if (num === 6) setTimeout(mostrarPodioFinal, 650);
+    avisoTemporario('Rodada ' + num + ' de 3 salva! ' + (num === 3 ? 'Partida concluída!' : 'Clique em Nova Rodada para continuar.'));
+    if (num === 3) setTimeout(mostrarPodioFinal, 650);
   }
 
   async function limparHistoricoRodadas() {
@@ -1726,7 +1746,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   function renderAuditoriaCyber() {
     var el=document.getElementById('cyber-auditoria');if(!el)return;
     var grupos=appState.grupos||[], respostas=appState.decisoes||{}, rodada=(appState.historicoRodadas||[]).length+(appState.rodadaSalva?0:1);
-    el.innerHTML='<p><strong>Rodada '+Math.min(6,rodada)+'/6</strong> · '+grupos.filter(g=>!!respostas[g]).length+'/'+grupos.length+' equipes enviaram</p>'+
+    el.innerHTML='<p><strong>Rodada '+Math.min(3,rodada)+'/3</strong> · '+grupos.filter(g=>!!respostas[g]).length+'/'+grupos.length+' equipes enviaram</p>'+
       grupos.map(g=>'<p style="padding:7px;border-bottom:1px solid #334155">'+escaparHTML(g)+' — '+(respostas[g]?'✅ Resposta recebida':'⏳ Pendente')+'</p>').join('');
   }
   function dadosRelatorioCyber(){
@@ -1751,7 +1771,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   function renderAvaliacaoFinalCyber(){
     var el=document.getElementById('cyber-avaliacao-final');if(!el)return;
     if(cyberRole!=='mestre'){el.textContent='';return;}
-    if((appState.historicoRodadas||[]).length<6&&!appState.competicaoEncerrada){el.innerHTML='<p class="subtitle">Aguardando o encerramento da competição.</p>';return;}
+    if((appState.historicoRodadas||[]).length<3&&!appState.competicaoEncerrada){el.innerHTML='<p class="subtitle">Aguardando o encerramento da competição.</p>';return;}
     var hist=appState.historicoRodadas||[];
     el.innerHTML=hist.map(h=>'<details style="margin:10px 0;padding:12px;border:1px solid #364568;border-radius:9px"><summary>Rodada '+Number(h.rodada)+' — analisar decisões</summary>'+
       (appState.grupos||[]).map(g=>{var d=(h.decisoesRodada||{})[g]||{},c=CARTAS_CRISE.find(x=>x.titulo===(h.cartasRodada||{})[g]);return '<div style="padding:12px;border-bottom:1px solid #34415c"><strong>'+escaparHTML(g)+'</strong><p>'+escaparHTML((h.cartasRodada||{})[g]||'')+'</p><p>Decisão 1: '+escaparHTML(d.q1Texto||'Não arquivada')+'</p><p>Decisão 2: '+escaparHTML(d.q2Texto||'Não arquivada')+'</p><p>Justificativa: '+escaparHTML(d.pitchText||'Não arquivada')+'</p><details><summary style="color:#f8c66e">Revelar soluções de referência</summary>'+(c?'<p>1: '+escaparHTML((c.opts1||[]).find(x=>x.ideal)?.texto||'')+'</p><p>2: '+escaparHTML((c.opts2||[]).find(x=>x.ideal)?.texto||'')+'</p>':'<p>Carta não identificada</p>')+'</details></div>';}).join('')+'</details>').join('');
@@ -1830,6 +1850,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var alvoTabBtn = document.getElementById('tab-grupo-' + tab);
     if (alvoPane) alvoPane.style.display = 'block';
     if (alvoTabBtn) alvoTabBtn.classList.add('active');
+    if (tab === 'missoes') renderMissaoCriseGrupo();
     if (tab === 'orientacoes' && alvoTabBtn) { alvoTabBtn.style.boxShadow = ''; alvoTabBtn.style.borderColor = ''; }
   }
 
@@ -1986,6 +2007,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var opt2 = c.opts2[parseInt(opt2Checked.value)];
     var decJust = document.getElementById('decisao-justificativa-pitch');
     var pitchText = decJust ? decJust.value.trim() : '';
+    if (pitchText.length < 80) { cyberAlert('Escreva uma justificativa de pelo menos 80 caracteres, indicando critérios, riscos e viabilidade.'); if(decJust)decJust.focus(); return; }
 
     var resultadoCombate = 'colapso';
     if (opt1.ideal && opt2.ideal) {
@@ -2052,8 +2074,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       var base = { fund: ptsFund, viab: ptsViab, saldo: ptsSaldo,
         impactoOrcamento: impactoEfetivo, implementada: implementada, reservaAcionada: reservaAcionada,
         orcamentoFinal: saldoDepoisBoss, custoOperacional: custoOperacional };
-      var calculada = pontuacaoCalculada(base);
-      appState.pontuacoes[g] = Object.assign({}, base, { total: calculada.total });
+      appState.pontuacoes[g] = Object.assign({}, base, { total: 0, avaliadoPeloMestre: false });
       // Historico de consultas preservado; os custos ja foram incorporados ao saldo.
 
       guardarEstado();
@@ -2071,6 +2092,74 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         if (modalD) modalD.classList.add('active');
       }
     }, 600);
+  }
+
+  // Guia pedagogico revelado apenas apos a submissao da carta.
+  // Textos orientativos, nao um gabarito automatico para a nota.
+  var GUIAS_HISTORICO = {
+    c1: {
+      caminho: 'Comparar as responsabilidades reais de juniores e plenos, revisar a faixa de entrada e priorizar o reenquadramento dos plenos com criterios claros. Quem orienta colegas e responde por sistemas criticos exige avaliacao compatível do cargo.',
+      meio: 'Se o caixa nao permite corrigir tudo agora, priorizar as distorcoes mais graves, estabelecer etapas e datas de revisao, comunicar os criterios e impedir novas contratacoes fora da faixa sem autorizacao.',
+      correcao: 'Descrever os dois cargos, avaliar requisitos e responsabilidades, simular o impacto dos ajustes, aprovar novas faixas e instituir revisao periodica. Verificar as condicoes legais antes de qualquer alteracao salarial.'
+    },
+    c2: {
+      caminho: 'Analisar a diferenca entre operadores e supervisores por complexidade, autonomia e responsabilidade. O reajuste coletivo deve ser cumprido, mas nao cria automaticamente obrigacao de repetir o mesmo percentual para todos.',
+      meio: 'Se nao houver verba para reajuste integral, adotar um cronograma de reenquadramento baseado na avaliacao dos cargos e complementar com desenvolvimento e trilhas de carreira, sem substituir direitos salariais.',
+      correcao: 'Atualizar descricoes dos cargos, comparar faixas, conferir regras coletivas aplicaveis, estimar custos e formalizar uma politica de progressao que evite novas distorcoes.'
+    },
+    c3: {
+      caminho: 'Confrontar os salarios com o mercado e com os demais cargos internos, identificando quais funcoes sao criticas. Ajustes seletivos e criterios transparentes tendem a ser mais sustentaveis que aumento indiscriminado de 40%.',
+      meio: 'Se nao for possivel igualar as ofertas externas, negociar revisao salarial programada, desenvolvimento, carreira e incentivos formalizados, priorizando riscos reais de perda de conhecimento.',
+      correcao: 'Realizar pesquisa salarial comparavel, revisar a faixa de analistas seniores, documentar criterios de retencao e monitorar rotatividade, sem prometer beneficios que a empresa nao consegue manter.'
+    },
+    c4: {
+      caminho: 'Avaliacao de cargos depende do trabalho realizado, e nao do nome do cargo. Compare autonomia, impacto de erros, requisitos e complexidade antes de decidir se as faixas devem coincidir.',
+      meio: 'Se faltam informacoes ou verba, entrevistar ocupantes e gestores, validar descricoes e corrigir primeiro a distorcao comprovada dentro do limite de R$ 1.500 mensais.',
+      correcao: 'Criar descricoes padronizadas, avaliar cargos por fatores, aprovar enquadramentos em comite e revisar funcoes quando suas responsabilidades mudarem.'
+    },
+    c5: {
+      caminho: 'O bonus deve estimular resultados sustentaveis, nao apenas faturamento. O exemplo mostra que a maior venda pode gerar menor margem e um incentivo desproporcional.',
+      meio: 'Manter os pagamentos ja devidos e testar uma formula futura com margem, qualidade e teto de despesa, ouvindo a equipe e avaliando as regras trabalhistas aplicaveis.',
+      correcao: 'Formalizar indicadores, metas, criterios de elegibilidade, periodicidade, limites financeiros e comunicacao clara. Monitorar efeitos inesperados e rever a politica prospectivamente.'
+    },
+    c6: {
+      caminho: 'Conferir se a promocao corresponde a requisitos, atribuicoes e resultados documentados. Antiguidade isolada ou indicacao pessoal nao substituem criterios de avaliacao do cargo.',
+      meio: 'Se a promocao ja produziu efeitos, revisar o enquadramento com cuidado juridico e instituir uma transicao documentada, respeitando direitos existentes e o limite de R$ 4.500 mensais.',
+      correcao: 'Criar descricoes de cargos, matriz de senioridade, comite de promocoes, criterios publicos e aprovacao orcamentaria. Reavaliar candidaturas com evidencias objetivas.'
+    }
+  };
+  function guiaHistoricoPorTitulo(titulo) {
+    var carta = CARTAS_CRISE.find(function(c){ return c.titulo === titulo; });
+    return carta ? GUIAS_HISTORICO[carta.id] : null;
+  }
+  function htmlGuiaHistorico(h) {
+    var guia = guiaHistoricoPorTitulo(h.cartaTitulo);
+    if (!guia) return '';
+    return '<details style="margin-top:10px; border-top:1px solid var(--border-neon); padding-top:9px;">' +
+      '<summary style="cursor:pointer;color:var(--cyan);font-weight:700;">🧭 Entenda a crise e como resolve-la</summary>' +
+      '<div style="padding-top:10px;font-size:0.86rem;line-height:1.5;">' +
+      '<p style="margin-bottom:9px;"><strong>🏆 Caminho mais defensavel:</strong> ' + escaparHTML(guia.caminho) + '</p>' +
+      '<p style="margin-bottom:9px;"><strong>⚖️ Como ajustar o meio-termo:</strong> ' + escaparHTML(guia.meio) + '</p>' +
+      '<p><strong>🛠️ Como corrigir a crise:</strong> ' + escaparHTML(guia.correcao) + '</p>' +
+      '<p style="margin-top:8px;color:var(--text-muted);font-size:0.78rem;">Referencia pedagogica: descricao e avaliacao de cargos, equidade interna, faixas salariais e progressao (Moreira et al., 2016). Outras solucoes bem fundamentadas podem ser validas.</p>' +
+      '</div></details>';
+  }
+
+  function renderGuiasConsultoresMestre() {
+    var container = document.getElementById('mestre-guias-consultores');
+    if (!container) return;
+    if (cyberRole !== 'mestre') { container.replaceChildren(); return; }
+    container.innerHTML = CARTAS_CRISE.map(function(carta) {
+      var guia = GUIAS_HISTORICO[carta.id];
+      if (!guia) return '';
+      return '<details style="border:1px solid var(--border-neon);border-radius:8px;padding:12px;margin-bottom:9px">' +
+        '<summary style="cursor:pointer;font-weight:700;color:var(--cyan)">' + escaparHTML(carta.titulo) + '</summary>' +
+        '<div style="padding-top:12px;line-height:1.55;font-size:.9rem">' +
+        '<p><strong>🏆 Melhor caminho:</strong> ' + escaparHTML(guia.caminho) + '</p>' +
+        '<p style="margin-top:9px"><strong>⚖️ Meio-termo:</strong> ' + escaparHTML(guia.meio) + '</p>' +
+        '<p style="margin-top:9px"><strong>🛠️ Correção da crise:</strong> ' + escaparHTML(guia.correcao) + '</p>' +
+        '</div></details>';
+    }).join('');
   }
 
   function renderHistoricoPessoalGrupo() {
@@ -2093,9 +2182,33 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var g = grupoAtivo;
     if (!g || !appState.historicoDecisoesGrupos || !appState.historicoDecisoesGrupos[g]) return;
     if (await cyberConfirm("Deseja realmente excluir este registo do seu histórico?")) {
-      appState.historicoDecisoesGrupos[g].splice(idx, 1);
-      guardarEstado();
-      renderHistoricoPessoalGrupo();
+      if (!sincronizacaoPronta || cyberRole !== 'equipe' || !window.rtdbRunTransaction || !window.db) {
+        cyberAlert('Aguarde a sincronização para excluir o registro.');
+        return;
+      }
+      var i = String(cyberTeamIndex + 1);
+      var destino = window.rtdbRef(window.db, CYBER_BASE + '/equipes/' + i);
+      var registro = appState.historicoDecisoesGrupos[g][idx];
+      var assinatura = JSON.stringify(registro);
+      try {
+        var resultado = await window.rtdbRunTransaction(destino, function(anterior) {
+          if (!anterior || !Array.isArray(anterior.historicoDecisoesGrupos)) return;
+          var lista = anterior.historicoDecisoesGrupos.slice();
+          var pos = lista.findIndex(function(item) { return JSON.stringify(item) === assinatura; });
+          if (pos < 0) return;
+          lista.splice(pos, 1);
+          return Object.assign({}, anterior, {historicoDecisoesGrupos: lista.length ? lista : null});
+        }, {applyLocally:false});
+        if (!resultado.committed) { cyberAlert('Registro não encontrado no histórico sincronizado.'); return; }
+        var atualizado = resultado.snapshot.val() || {};
+        cyberPrivateState[i] = atualizado;
+        appState.historicoDecisoesGrupos[g] = atualizado.historicoDecisoesGrupos || [];
+        renderHistoricoPessoalGrupo();
+        cyberAlert('Registro excluído do histórico.');
+      } catch (erro) {
+        console.error(erro);
+        cyberAlert('Não foi possível excluir o registro no Firebase.');
+      }
     }
   }
 
@@ -2159,6 +2272,87 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       box.style.display = 'none';
     }
   }
+
+  var CYBER_PISTAS = {
+    c1: ['Compare o que um Júnior faz e o que um Pleno assume antes de discutir valores.','Os Plenos treinam os Juniores. Que critérios justificam a diferença salarial?','A diretoria exige uma correção que não provoque reajuste geral sem cálculo.'],
+    c2: ['Compare responsabilidades de operadores e supervisores após o reajuste.','Uma diferença percentual menor não significa automaticamente injustiça. Quais funções mudaram?','O acordo coletivo precisa ser respeitado e a folha precisa continuar viável.'],
+    c3: ['Identifique o custo de perder profissionais críticos e o valor relativo dos cargos.','Retenção não se resume a aumentar salários: investigue carreira, mercado e equidade.','A concorrência fez ofertas; a diretoria exige uma solução sustentável.'],
+    c4: ['Os dois analistas têm escolaridade semelhante, mas o impacto das decisões é igual?','Avalie o trabalho real, não apenas o título ou o tempo de serviço.','O limite para ajustes é R$ 1.500 por mês: justifique a prioridade.'],
+    c5: ['Compare a margem bruta produzida por cada vendedor com o bônus prometido.','Remuneração variável deve estimular resultado, qualidade e sustentabilidade.','Não altere retroativamente pagamentos já devidos; desenhe regras para o próximo ciclo.'],
+    c6: ['Verifique os requisitos do cargo de supervisor e o trabalho realmente executado.','Promoção exige critérios verificáveis, não apenas indicação ou antiguidade.','A diretoria dispõe de R$ 4.500/mês para ajustes. Priorize e justifique.']
+  };
+  // A missão é derivada da carta sorteada e não depende de envio do Mestre.
+  function renderMissaoCriseGrupo(){
+    var el=document.getElementById('container-missao-crise-grupo');
+    if(!el)return;
+    var carta=appState.crises && appState.crises[grupoAtivo];
+    if(!carta){el.innerHTML='<p class="subtitle">Aguardando a carta desta rodada.</p>';return;}
+    var id=carta.id||carta.cartaId;
+    var pistas=CYBER_PISTAS[id]||[];
+    var titulo=carta.titulo||'Crise atual';
+    el.innerHTML='<div style="border-left:3px solid var(--cyan);padding:10px 14px;background:rgba(0,220,255,.04);border-radius:6px">'+
+      '<strong>'+escaparHTML(titulo)+'</strong>'+
+      '<p style="margin:10px 0 0">'+escaparHTML(pistas[0]||carta.desc||'Analise o cenário e prepare uma decisão fundamentada.')+'</p>'+
+      '</div>';
+  }
+
+  // Complementos preparados por carta: dados de simulacao, sem revelar respostas.
+  var ORIENTACOES_EXTRAS = {
+    c1: {
+      dados:'DADOS DA CRISE — Quatro juniores recebem R$ 5.500 cada e seis plenos recebem R$ 5.200 cada. Os plenos treinam os juniores. A folha mensal desses dez profissionais é de R$ 53.200. Um aumento de R$ 300 para cada pleno custaria R$ 1.800 mensais, sem encargos.',
+      pergunta:'INVESTIGAÇÃO — Que responsabilidades justificam distinguir júnior e pleno? Como corrigir a diferença sem criar outra distorção na próxima contratação?',
+      restricao:'ALERTA — A correção deve caber no orçamento e respeitar as condições contratuais. Evitem aumentos gerais sem calcular seu impacto.'
+    },
+    c2: {
+      dados:'DADOS DA CRISE — O reajuste dos operadores foi de 12%. Antes de definir qualquer ajuste para supervisores, verifiquem quanto cada cargo recebe e quais responsabilidades de liderança realmente exerce.',
+      pergunta:'INVESTIGAÇÃO — O reajuste dos operadores muda a complexidade do trabalho dos supervisores? Uma diferença salarial menor, por si só, exige reajuste automático?',
+      restricao:'ALERTA — O reajuste coletivo deve ser cumprido. Não existe, nesta simulação, obrigação automática de repetir o mesmo percentual para toda a hierarquia.'
+    },
+    c3: {
+      dados:'DADOS DA CRISE — A concorrente ofereceu salários 40% maiores aos analistas de riscos seniores e três profissionais já saíram. A carta não informa o salário atual nem quantos permanecem: não calculem um custo exato sem esses dados.',
+      pergunta:'INVESTIGAÇÃO — Quais funções são difíceis de substituir? Uma contraproposta seletiva pode criar desigualdade entre profissionais com responsabilidades equivalentes?',
+      restricao:'ALERTA — A direção precisa de um plano de retenção sustentável. A oferta da concorrência não obriga a empresa a conceder 40% de aumento a todos.'
+    },
+    c4: {
+      dados:'DADOS DA CRISE — A analista de Qualidade recebe R$ 4.600 e pode interromper lotes; o analista Administrativo recebe R$ 5.400 e trabalha sob aprovação gerencial. Ambos têm graduação e três anos de experiência. Há R$ 1.500 mensais disponíveis para ajustes.',
+      pergunta:'INVESTIGAÇÃO — Quem assume maior responsabilidade por riscos e decisões? Quais descrições de atividades precisam ser confirmadas antes de rever o enquadramento?',
+      restricao:'ALERTA — O mesmo nível de escolaridade não torna dois cargos equivalentes. O limite de R$ 1.500 mensais exige priorizar correções justificadas.'
+    },
+    c5: {
+      dados:'DADOS DA CRISE — Vendedor A: faturamento de R$ 100.000, margem de 4% (R$ 4.000) e bônus de 5% (R$ 5.000). Vendedor B: faturamento de R$ 80.000, margem de 25% (R$ 20.000) e bônus de R$ 4.000. Compare os incentivos com os resultados.',
+      pergunta:'INVESTIGAÇÃO — Por que quem gera menos margem bruta recebe bônus maior? Qual indicador poderia incentivar vendas rentáveis sem desestimular o trabalho comercial?',
+      restricao:'ALERTA — A proposta deve tratar as regras futuras sem cancelar unilateralmente pagamentos já devidos. Considerem as obrigações contratuais e trabalhistas.'
+    },
+    c6: {
+      dados:'DADOS DA CRISE — Assistentes: R$ 2.800; analistas: R$ 4.200; supervisores: R$ 5.800. A promoção direta de assistente a supervisor aumenta a remuneração em R$ 3.000 mensais. O orçamento disponível para ajustes é de R$ 4.500 mensais.',
+      pergunta:'INVESTIGAÇÃO — O profissional promovido reúne os requisitos do cargo de supervisor? Quais evidências devem ser comparadas com as da analista preterida?',
+      restricao:'ALERTA — Uma promoção já efetivada exige cautela jurídica antes de qualquer reversão. Documentem os critérios e considerem o orçamento disponível.'
+    }
+  };
+  function prepararOrientacaoExtra(){
+    var dest=document.getElementById('select-destinatario-msg');
+    var tipo=document.getElementById('tipo-orientacao-extra');
+    var campo=document.getElementById('texto-msg');
+    var status=document.getElementById('orientacao-extra-status');
+    if(!dest||!tipo||!campo||!status)return;
+    if(!tipo.value){status.textContent='';return;}
+    if(dest.value==='TODOS'){
+      status.textContent='Selecione uma equipe para usar a orientação específica da carta.';
+      return;
+    }
+    var carta=appState.crises && appState.crises[dest.value];
+    var id=carta && (carta.id||carta.cartaId);
+    if(!id || !ORIENTACOES_EXTRAS[id]){
+      status.textContent='Essa equipe ainda não tem carta atribuída nesta rodada.';
+      return;
+    }
+    campo.value=ORIENTACOES_EXTRAS[id][tipo.value]||'';
+    status.textContent='Rascunho preparado para '+dest.value+'. Revise antes de enviar.';
+  }
+  document.getElementById('select-destinatario-msg')?.addEventListener('change',function(){
+    var tipo=document.getElementById('tipo-orientacao-extra');
+    if(tipo && tipo.value) prepararOrientacaoExtra();
+  });
 
   function enviarMensagemMestre() {
     var destEl = document.getElementById('select-destinatario-msg');
@@ -2230,7 +2424,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
 
   var timerMaster, masterTime = 900, ultimoAlertaTempo = '';
-  function estadoTimer() { return appState.cronometroCompeticao || { etapa:'deliberacao', restante:900, status:'aguardando', terminaEm:0 }; }
+  function estadoTimer() { var t=appState.cronometroCompeticao || { etapa:'deliberacao', restante:900, status:'aguardando', terminaEm:0 }; if(t.status!=='rodando' && Number(t.restante)===600) return Object.assign({},t,{restante:900}); return t; }
   function tempoRestanteTimer(t) { return Math.max(0, t.status === 'rodando' ? Math.ceil((Number(t.terminaEm)-Date.now())/1000) : Number(t.restante || 0)); }
   function publicarTimer(t) { appState.cronometroCompeticao=t; guardarEstado(); atualizarTimerCompartilhado(); }
   async function setMasterTimerStage() {
@@ -2290,7 +2484,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var etapa=t.etapa==='debriefing'?'Debriefing':'Deliberação coletiva';
     var status=t.status==='rodando'?(seg?'Em andamento':'Tempo encerrado'):t.status==='pausado'?'Pausado':t.status==='encerrado'?(t.encerramentoMotivo==='todas_decisoes'?'Encerrado: todas as decisões recebidas':'Encerrado'):'Aguardando distribuição';
     var st=document.getElementById('timer-status');if(st)st.textContent=etapa+' • '+status;
-    var info=document.getElementById('timer-stage-info');if(info)info.textContent=t.etapa==='debriefing'?'15 minutos para feedback e encerramento.':'15 minutos a partir da entrega da última carta.';
+    var info=document.getElementById('timer-stage-info');if(info)info.textContent=t.etapa==='debriefing'?'10 minutos para feedback e encerramento.':'15 minutos a partir da entrega da última carta.';
     var grupo=document.getElementById('cronometro-compartilhado-equipe');
     if(grupo){grupo.style.display=t.status==='aguardando'||!document.getElementById('screen-grupo')?.classList.contains('active')?'none':'block';grupo.textContent=etapa+' • '+mm+':'+ss+' • '+status;}
     if(t.status==='rodando' && t.etapa==='deliberacao'){
@@ -2300,6 +2494,36 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
   setInterval(atualizarTimerCompartilhado,500);
 
+  function preencherAvaliacaoMestreCyber(){
+    if(cyberRole!=='mestre')return;
+    var sel=document.getElementById('cyber-avaliacao-equipe');if(!sel)return;
+    var anterior=sel.value;
+    sel.innerHTML=(appState.grupos||[]).map(function(g){return '<option value="'+escaparHTML(g)+'">'+escaparHTML(g)+'</option>';}).join('');
+    if((appState.grupos||[]).includes(anterior))sel.value=anterior;
+    carregarAvaliacaoMestreCyber();
+  }
+  function carregarAvaliacaoMestreCyber(){
+    var sel=document.getElementById('cyber-avaliacao-equipe');if(!sel)return;
+    var p=(appState.pontuacoes||{})[sel.value]||{};
+    var campos=['cyber-nota-fund','cyber-nota-equidade','cyber-nota-viab','cyber-nota-coerencia'];
+    var valores=p.avaliadoPeloMestre?[p.notaFund,p.notaEquidade,p.notaViab,p.notaCoerencia]:[0,0,0,0];
+    campos.forEach(function(id,i){var el=document.getElementById(id);if(el)el.value=valores[i]||0;});
+    var st=document.getElementById('cyber-avaliacao-status');if(st)st.textContent=p.avaliadoPeloMestre?'Avaliação registrada.':'Aguardando avaliação.';
+  }
+  function salvarAvaliacaoMestreCyber(){
+    if(cyberRole!=='mestre'){cyberAlert('Apenas o Mestre pode avaliar.');return;}
+    if(appState.rodadaSalva){cyberAlert('Rodada arquivada; avaliações bloqueadas.');return;}
+    var sel=document.getElementById('cyber-avaliacao-equipe'),g=sel&&sel.value;
+    if(!g||!(appState.decisoes||{})[g]||!(appState.pontuacoes||{})[g]){cyberAlert('A equipe precisa enviar a decisão antes da avaliação.');return;}
+    var ids=['cyber-nota-fund','cyber-nota-equidade','cyber-nota-viab','cyber-nota-coerencia'],max=[40,30,20,10];
+    var notas=ids.map(function(id){return Number(document.getElementById(id).value);});
+    if(notas.some(function(v,i){return !Number.isInteger(v)||v<0||v>max[i];})){cyberAlert('Preencha notas inteiras dentro dos limites.');return;}
+    var p=appState.pontuacoes[g];
+    p.notaFund=notas[0];p.notaEquidade=notas[1];p.notaViab=notas[2];p.notaCoerencia=notas[3];
+    p.avaliadoPeloMestre=true;p.total=notas.reduce(function(a,b){return a+b;},0);
+    guardarEstado();renderRanking();carregarAvaliacaoMestreCyber();cyberAlert('Avaliação salva para '+g+'.');
+  }
+  document.addEventListener('change',function(e){if(e.target&&e.target.id==='cyber-avaliacao-equipe')carregarAvaliacaoMestreCyber();});
   function renderRanking() {
     var tbody = document.getElementById('tbody-ranking');
     if (!tbody) return;
@@ -2312,9 +2536,9 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     });
     lista.sort(function(a,b) { return b.total - a.total; });
     var botaoPodio=document.getElementById('btn-rever-podio');
-    if(botaoPodio)botaoPodio.style.display=(hist.length===6||appState.competicaoEncerrada)?'block':'none';
+    if(botaoPodio)botaoPodio.style.display=(hist.length===3||appState.competicaoEncerrada)?'block':'none';
     tbody.innerHTML = lista.map(function(item, idx) {
-      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.rodada + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' / 600 pts</strong></td></tr>';
+      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.rodada + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' / 300 pts</strong></td></tr>';
     }).join('');
   }
 
@@ -2332,9 +2556,11 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         renderAlertaConsultoriasMestre();
         renderGerenciarMensagensMestre();
         renderRanking();
+        if(document.activeElement && !document.activeElement.closest('#cyber-avaliacao-manual'))preencherAvaliacaoMestreCyber();
         renderHistoricoTendencias();
         renderAuditoriaCyber();
         renderAvaliacaoFinalCyber();
+        renderGuiasConsultoresMestre();
       } else if (active.id === 'screen-grupo') {
         if (grupoAtivo) {
           var headerNome = document.getElementById('grupo-header-nome');
@@ -2343,6 +2569,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
           verificarRecebimentoEquipe();
           renderHistoricoPessoalGrupo();
           renderOrientacoes();
+          renderMissaoCriseGrupo();
           verificarNovosComunicadosEquipe();
         }
       }
@@ -2413,12 +2640,12 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         window.rtdbRunTransaction(destino,function(anterior){
           if(anterior && anterior._rodadaId===privado._rodadaId && anterior.decisoes)return;
           if(anterior && anterior._rodadaId===privado._rodadaId && anterior._teamIndex && Number(anterior._teamIndex)!==Number(i))return;
-          var combinado=Object.assign({},anterior||{},privado);if(anterior && Array.isArray(anterior.historicoDecisoesGrupos) && (!privado.historicoDecisoesGrupos || anterior.historicoDecisoesGrupos.length>privado.historicoDecisoesGrupos.length))combinado.historicoDecisoesGrupos=anterior.historicoDecisoesGrupos;return combinado;
+          var combinado=Object.assign({},anterior||{},privado);if(anterior && Object.prototype.hasOwnProperty.call(anterior,'historicoDecisoesGrupos'))combinado.historicoDecisoesGrupos=anterior.historicoDecisoesGrupos;return combinado;
         },{applyLocally:false}).then(function(r){if(!r.committed)cyberAlert('Resposta já enviada para esta rodada; duplicação bloqueada.');}).catch(function(e){console.error(e);cyberAlert('Falha ao registrar decisão da equipe.');});
       } else {
         window.rtdbRunTransaction(destino,function(anterior){
           if(anterior && anterior._rodadaId===privado._rodadaId && anterior.decisoes)return anterior;
-          var combinado=Object.assign({},anterior||{},privado);if(anterior && Array.isArray(anterior.historicoDecisoesGrupos) && (!privado.historicoDecisoesGrupos || anterior.historicoDecisoesGrupos.length>privado.historicoDecisoesGrupos.length))combinado.historicoDecisoesGrupos=anterior.historicoDecisoesGrupos;return combinado;
+          var combinado=Object.assign({},anterior||{},privado);if(anterior && Object.prototype.hasOwnProperty.call(anterior,'historicoDecisoesGrupos'))combinado.historicoDecisoesGrupos=anterior.historicoDecisoesGrupos;return combinado;
         },{applyLocally:false}).catch(function(e){console.error(e);cyberAlert('Falha ao sincronizar dados da equipe.');});
       }
       cyberPrivateState[i]=JSON.parse(JSON.stringify(privado));
@@ -2492,6 +2719,7 @@ async function publicarResultadoPendente(i,d){
  // A validação definitiva dos cálculos deve ocorrer no servidor (Cloud Functions).
  // Este modo é provisório e requer o Mestre conectado.
  const existente=((cyberPublicState.pontuacoes||{})[g]);
+ if(existente && existente.avaliadoPeloMestre)return;
  if(existente && Number(existente.total)===Number(r.pontuacao.total) && Number((cyberPublicState.orcamentosGrupos||{})[g])===Number(r.orcamento))return;
  resultadosEmPublicacao.add(chave);
  const alteracoes={};
