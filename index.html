@@ -2675,5 +2675,39 @@ document.addEventListener('keydown',function(e){
 },true);
 })();
 </script>
+
+<style id="cyber-site-fullscreen-style">
+#cyber-site-fullscreen-btn{position:fixed;right:16px;bottom:16px;z-index:2147482000;background:#0b2943;color:#e8fbff;border:1px solid #28ddf2;border-radius:10px;padding:11px 16px;box-shadow:0 4px 22px #000b;cursor:pointer;font:700 13px Arial,sans-serif}
+#cyber-site-fullscreen-btn:hover,#cyber-site-fullscreen-btn:focus-visible{background:#145374;outline:2px solid #e4f9ff}
+html.cyber-site-fullscreen,html.cyber-site-fullscreen body{min-height:100%;}
+html.cyber-site-fullscreen body{padding:12px 18px 70px;overflow-x:hidden}
+html.cyber-site-fullscreen .container{width:100%;max-width:min(96vw,1700px);margin:0 auto;}
+/* Proporção 16:9 como referência de projeção, sem distorcer nem cortar painéis longos. */
+@media (min-aspect-ratio:16/9) and (min-width:900px){html.cyber-site-fullscreen .container{max-width:min(96vw,calc(94vh * 16 / 9));}}
+@media (max-width:650px){#cyber-site-fullscreen-btn{right:9px;bottom:9px;padding:9px 12px;font-size:11px}html.cyber-site-fullscreen body{padding:8px 8px 60px}}
+</style>
+<button id="cyber-site-fullscreen-btn" type="button" onclick="cyberAlternarTelaCheiaSite()" title="Alternar tela cheia do site (16:9)">⛶ Tela cheia 16:9</button>
+
+<script id="cyber-site-fullscreen-script">
+(function(){
+ const btn=()=>document.getElementById('cyber-site-fullscreen-btn');
+ function atualizar(){
+  const ligado=!!document.fullscreenElement && document.fullscreenElement===document.documentElement;
+  document.documentElement.classList.toggle('cyber-site-fullscreen',ligado);
+  if(btn())btn().textContent=ligado?'⤢ Sair da tela cheia':'⛶ Tela cheia 16:9';
+ }
+ window.cyberAlternarTelaCheiaSite=async function(){
+  try{
+   if(document.fullscreenElement===document.documentElement){await document.exitFullscreen();}
+   else if(document.fullscreenElement){await document.exitFullscreen();await document.documentElement.requestFullscreen();}
+   else{await document.documentElement.requestFullscreen();}
+  }catch(err){alert('Não foi possível ativar a tela cheia neste navegador. Tente F11 no computador.');}
+  atualizar();
+ };
+ document.addEventListener('fullscreenchange',atualizar);
+ document.addEventListener('webkitfullscreenchange',atualizar);
+ atualizar();
+})();
+</script>
 </body>
 </html>
