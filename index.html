@@ -917,6 +917,7 @@ body { overflow-x:hidden; }
 
   <!-- PAINEL DA EQUIPE -->
   <div id="screen-grupo" class="screen">
+
     <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <div>
         <h2 class="title" id="grupo-header-nome">Painel da Equipe</h2>
@@ -2591,25 +2592,63 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
 
   var cyberAlertaRodadaChave='',cyberUltimoRestante=901,cyberAvisosTempo={},cyberFimTimerEmCurso=false;
-  var cyberAudioContext=null;
-  function tocarAlarmeCyber(urgente){
-    try {
-      var AC=window.AudioContext||window.webkitAudioContext;
-      if(!AC)return;
-      cyberAudioContext=cyberAudioContext||new AC();
-      if(cyberAudioContext.state==='suspended')cyberAudioContext.resume();
-      var agora=cyberAudioContext.currentTime;
-      for(var i=0;i<(urgente?3:2);i++){
-        var osc=cyberAudioContext.createOscillator(),ganho=cyberAudioContext.createGain();
-        osc.type='sine';osc.frequency.value=urgente?900:680;
-        ganho.gain.setValueAtTime(0.0001,agora+i*.28);
-        ganho.gain.exponentialRampToValueAtTime(.14,agora+i*.28+.02);
-        ganho.gain.exponentialRampToValueAtTime(.0001,agora+i*.28+.20);
-        osc.connect(ganho);ganho.connect(cyberAudioContext.destination);
-        osc.start(agora+i*.28);osc.stop(agora+i*.28+.22);
-      }
-    }catch(e){console.warn('Áudio indisponível:',e);}
+  // Um único estampido sintético no último segundo, somente nas equipes.
+  var cyberEstampidoUltimaRodada='',cyberSegundoAnterior=901;
+  function equipePodeOuvirAlarme(){
+    return cyberRole==='equipe' && !!document.getElementById('screen-grupo')?.classList.contains('active');
   }
+  var cyberAudioContext=null;
+  function habilitarAudioEquipe(){
+    if(!equipePodeOuvirAlarme())return;
+    try{var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;cyberAudioContext=cyberAudioContext||new AC();if(cyberAudioContext.state==='suspended')cyberAudioContext.resume().catch(function(){});}catch(e){}
+  }
+  document.addEventListener('pointerdown',habilitarAudioEquipe,{passive:true});
+  document.addEventListener('keydown',habilitarAudioEquipe);
+  // Alarme de evacuação sintético: alternância de duas frequências,
+  // apenas para equipes durante os últimos 30 segundos da deliberação.
+  var cyberEvacChave='', cyberEvacProximoPulso=0;
+  function pararGritoUrgencia(){
+    cyberEvacChave=''; cyberEvacProximoPulso=0;
+    try{window.speechSynthesis?.cancel();}catch(e){}
+  }
+  function tocarPulsoEvacuacao(ctx,inicio,frequencia,duracao){
+    var osc=ctx.createOscillator(), ganho=ctx.createGain();
+    osc.type='sawtooth';
+    osc.frequency.setValueAtTime(frequencia,inicio);
+    ganho.gain.setValueAtTime(.0001,inicio);
+    ganho.gain.linearRampToValueAtTime(.13,inicio+.035);
+    ganho.gain.setValueAtTime(.13,inicio+duracao-.055);
+    ganho.gain.linearRampToValueAtTime(.0001,inicio+duracao);
+    var filtro=ctx.createBiquadFilter();
+    filtro.type='lowpass';filtro.frequency.value=1600;
+    osc.connect(filtro);filtro.connect(ganho);ganho.connect(ctx.destination);
+    osc.start(inicio);osc.stop(inicio+duracao+.015);
+  }
+  function atualizarGritoUrgencia(t,seg){
+    var ativo=t.status==='rodando'&&t.etapa==='deliberacao'&&seg>0&&seg<=30&&equipePodeOuvirAlarme();
+    if(!ativo){pararGritoUrgencia();return;}
+    var chave=String(t.sorteioId||t.terminaEm);
+    if(cyberEvacChave!==chave){cyberEvacChave=chave;cyberEvacProximoPulso=0;}
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+      cyberAudioContext=cyberAudioContext||new AC();
+      var ctx=cyberAudioContext;
+      if(ctx.state==='suspended'){ctx.resume().catch(function(){});return;}
+      // Padrão contínuo: dois tons alternados (alto/baixo), como sirene de evacuação.
+      // Cada ciclo é agendado apenas uma vez, mesmo com atualização a cada 500 ms.
+      while(cyberEvacProximoPulso<ctx.currentTime+1.1){
+        var inicio=Math.max(ctx.currentTime+.015,cyberEvacProximoPulso);
+        tocarPulsoEvacuacao(ctx,inicio,960,.40);
+        tocarPulsoEvacuacao(ctx,inicio+.46,640,.40);
+        cyberEvacProximoPulso=inicio+.92;
+      }
+    }catch(e){console.warn('Alarme de evacuação indisponível:',e);}
+  }
+  // Mantidas como funções de compatibilidade; não há voz nem estampido.
+  function tocarEstampidoFinal(){}
+  function tocarAlarmeCyber(){}
+  function iniciarSireneDeliberacao(){}
+  function pararSireneDeliberacao(){pararGritoUrgencia();}
   var cyberApresentacaoKey='cyber_rh_apresentacao_60m_v1';
   function lerApresentacao(){
     try{return Object.assign({status:'aguardando',restante:3600,terminaEm:0},JSON.parse(localStorage.getItem(cyberApresentacaoKey)||'{}'));}
@@ -2639,7 +2678,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if(status)status.textContent=v.status==='rodando'?(seg?'Apresentação em andamento':'Tempo encerrado'):v.status==='pausado'?'Pausado':v.status==='encerrado'?'Tempo encerrado':'Aguardando início';
     if(v.status==='rodando'&&seg<=30&&cyberAvisoApresentacao!==String(v.terminaEm)){
       cyberAvisoApresentacao=String(v.terminaEm);
-      tocarAlarmeCyber(true);
+      // O relógio da apresentação permanece silencioso no Mestre.
       if(typeof avisoTemporario==='function')avisoTemporario('Apresentação: faltam 30 segundos!');
     }
     if(v.status==='rodando'&&seg===0){v.status='encerrado';v.restante=0;v.terminaEm=0;localStorage.setItem(cyberApresentacaoKey,JSON.stringify(v));}
@@ -2713,7 +2752,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
           cyberAvisosTempo[limite]=true;
           var aviso=limite===450?'Faltam 7 minutos e 30 segundos!':limite===90?'Falta 1 minuto e 30 segundos!':limite===30?'ATENÇÃO: faltam 30 segundos!':'Tempo de deliberação encerrado!';
           if(typeof avisoTemporario==='function')avisoTemporario(aviso);
-          tocarAlarmeCyber(limite===30||limite===0);
+          // Avisos de 7:30, 1:30 e 0:30 são apenas visuais.
         }
       }
       cyberUltimoRestante=seg;
@@ -2726,12 +2765,23 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         },{applyLocally:false}).finally(function(){cyberFimTimerEmCurso=false;});
       }
     }
-    if(grupo){
-      var urgente=t.status==='rodando' && seg<=30;
-      grupo.classList.toggle('cyber-tempo-critico',urgente);
-      grupo.textContent=etapa+' • '+mm+':'+ss+' • '+status+(urgente?' • ENVIE AGORA!':'');
+    // Estampido único em 00:01, somente na aba da equipe.
+    // Não toca ao abrir a página com o relógio já zerado.
+    if(t.status==='rodando' && t.etapa==='deliberacao' && seg<=1 && seg>=0 && cyberSegundoAnterior>1){
+      var chaveFinal=String(t.sorteioId||t.terminaEm);
+      if(cyberEstampidoUltimaRodada!==chaveFinal && equipePodeOuvirAlarme()){
+        cyberEstampidoUltimaRodada=chaveFinal;
+        // O alarme de evacuação substitui o estampido final.
+      }
     }
-    if(display)display.classList.toggle('cyber-tempo-critico',t.status==='rodando' && seg<=30);
+    cyberSegundoAnterior=t.status==='rodando'?seg:901;
+    atualizarGritoUrgencia(t,seg);
+    if(grupo){
+      var urgente=t.status==='rodando' && seg>0 && seg<=30;
+      grupo.classList.toggle('cyber-tempo-critico',urgente);
+      grupo.textContent=etapa+' • '+mm+':'+ss+' • '+status;
+    }
+    if(display)display.classList.toggle('cyber-tempo-critico',t.status==='rodando' && seg>0 && seg<=30);
     atualizarApresentacao();
 
   }
