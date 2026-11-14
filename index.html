@@ -580,6 +580,9 @@ input:-webkit-autofill { -webkit-text-fill-color: #f8fafc !important; -webkit-bo
 .sorteio-deck.orbit-layout .sorteio-card.dispatched {opacity:.12!important;}
 @media(max-width:700px){.sorteio-deck.orbit-layout{--orbit-x:clamp(105px,28vw,185px);--orbit-y:clamp(76px,21vw,115px)}}
 @media(prefers-reduced-motion:reduce){.sorteio-deck.orbit-layout.shuffling .sorteio-card,.sorteio-deck.orbit-layout.selected-shuffling .sorteio-card.selected{animation:none!important}}
+/* Pisca apenas nos últimos 30 segundos da deliberação e apresentação. */
+@keyframes cyberPiscarUrgente { 0%,100% {background:#590909;color:#fff;border-color:#ff3434;box-shadow:0 0 22px #ff3030} 50% {background:#170307;color:#ff5555;border-color:#ff5555;box-shadow:0 0 3px #ff3030} }
+.cyber-tempo-critico {animation:cyberPiscarUrgente .65s infinite!important;color:#fff!important;border:2px solid #ff3333!important}
 </style>
 <style>
 
@@ -711,17 +714,16 @@ body { overflow-x:hidden; }
     <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
       <button class="btn" style="padding:16px 32px; font-size:1rem;" onclick="tentarEntrarMestre()">Mesa do Game Master / Banca</button>
       <button class="btn btn-sec" style="padding:16px 32px; font-size:1rem;" onclick="mudarTela('screen-grupo-login')">Entrada das Equipes</button>
-      <button class="btn btn-sec" style="padding:16px 32px; font-size:1rem;" onclick="mudarTela('screen-apresentacao')">Apresentação</button>
+      <button class="btn btn-sec" style="padding:16px 32px; font-size:1rem;" onclick="mudarTela('screen-apresentacao')">🎬 Apresentação</button>
     </div>
   </div>
 
     <div id="screen-apresentacao" class="screen">
       <div class="card" style="border:1px solid #22d9ee;">
         <button type="button" class="btn btn-sec" onclick="mudarTela('screen-home')" style="margin-bottom:12px">← Voltar à entrada</button>
-        <h3 class="title" style="color:#eaf4ff">Apresentação • Fundamentação teórica e regras</h3>
-        <p class="subtitle">Exiba os slides aqui ou abra em tela cheia. Ao terminar, volte à entrada e escolha Mestre ou Equipe para iniciar a partida.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0;">
           <button type="button" class="btn" onclick="cyberAbrirSlides()">⛶ Tela cheia / Apresentar</button>
+          <button type="button" class="btn" onclick="iniciarApresentacao()">▶ Iniciar apresentação</button>
           <button type="button" class="btn btn-sec" onclick="cyberSlidePreview(-1)">◀ Anterior</button>
           <strong id="cyber-preview-contador" style="display:none" aria-hidden="true"></strong>
           <button type="button" class="btn btn-sec" onclick="cyberSlidePreview(1)">Próximo ▶</button>
@@ -843,13 +845,7 @@ body { overflow-x:hidden; }
     <!-- TAB 5: CRONÔMETROS -->
     <div id="mestre-timer" class="mestre-tab-content" style="display:none;">
       <div class="card">
-        <h3 class="title">Controle de tempo da competição</h3>
-        <label for="stage-timer-select">Etapa</label>
-        <select id="stage-timer-select" onchange="setMasterTimerStage()">
-          <option value="deliberacao">1. Deliberação — 15 minutos</option>
-          <option value="debriefing">2. Debriefing — 10 minutos</option>
-        </select>
-        <p id="timer-stage-info" class="subtitle" style="margin-top:10px">Começa automaticamente após a última carta ser distribuída.</p>
+        
         <div class="timer" id="display-master-timer">15:00</div>
         <p id="timer-status" style="text-align:center;color:var(--cyan);font-weight:700">Aguardando distribuição</p>
         <div class="btn-group" style="justify-content:center;margin-top:14px">
@@ -858,6 +854,16 @@ body { overflow-x:hidden; }
           <button class="btn btn-sec" onclick="prorrogarTimer()">+2 min (todos)</button>
           <button class="btn btn-danger" onclick="resetMasterTimer()">Encerrar etapa</button>
         </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="timer" id="display-apresentacao">60:00</div>
+        <p id="status-apresentacao" style="text-align:center;color:var(--cyan)">Aguardando início</p>
+        <div class="btn-group" style="justify-content:center">
+          <button class="btn" onclick="iniciarApresentacao()">Iniciar / Retomar</button>
+          <button class="btn btn-sec" onclick="pausarApresentacao()">Pausar</button>
+          <button class="btn btn-danger" onclick="reiniciarApresentacao()">Reiniciar 60 min</button>
+        </div>
+        
       </div>
     </div>
 
@@ -1046,16 +1052,20 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   var cyberPublicState = null, cyberPrivateState = {};
   var CYBER_BASE = 'cyber_rh_seguro_v1';
   var CYBER_PRIVATE_KEYS = ['decisoes','consultas','historicoDecisoesGrupos'];
+  var CYBER_LOCAL_UI_KEYS=['currentScreen'];
+  function cyberTelaLocal(){return sessionStorage.getItem('cyber_rh_tela_local')||'screen-home';}
+  function cyberConsultaChave(g,item){return String((appState.grupos||[]).indexOf(g)+1)+'_'+String(item.id||('legado_'+String(item.esp||'')+'_'+String(item.hora||'')));}
+  function cyberConsultaTravada(g,item){return !!(item && ((appState.travasConsultorias||{})[cyberConsultaChave(g,item)] || item.travado));}
   function cyberTeamId(g) { return String((appState.grupos || []).indexOf(g) + 1); }
-  function cyberPublicOnly(st) { var x=JSON.parse(JSON.stringify(st||{})); CYBER_PRIVATE_KEYS.forEach(function(k){delete x[k]});return x; }
+  function cyberPublicOnly(st) { var x=JSON.parse(JSON.stringify(st||{})); CYBER_PRIVATE_KEYS.concat(CYBER_LOCAL_UI_KEYS).forEach(function(k){delete x[k]});return x; }
   function cyberPrivateFor(g,st) { var o={_rodadaId:String(st.identificadorSorteioAtual||''),_teamIndex:cyberTeamIndex+1}; CYBER_PRIVATE_KEYS.forEach(function(k){o[k]=((st[k]||{})[g]??null)}); if((st.decisoes||{})[g]){o.resultadoCalculado={pontuacao:(st.pontuacoes||{})[g]||null,orcamento:(st.orcamentosGrupos||{})[g]??null,reserva:!!(st.reservaRHUtilizada||{})[g],penalidade:!!(st.penalidadesGrupos||{})[g]};} return o; }
   function cyberMergeState() {
     if(!cyberPublicState)return;
-    var screen=appState.currentScreen;
+    var screen=cyberTelaLocal();
     appState=JSON.parse(JSON.stringify(cyberPublicState));
     CYBER_PRIVATE_KEYS.forEach(function(k){appState[k]={}});
     Object.keys(cyberPrivateState).forEach(function(i){if(cyberRole==='equipe' && Number(i)!==cyberTeamIndex+1)return;var g=appState.grupos[Number(i)-1],d=cyberPrivateState[i];if(!g||!d|| (d._teamIndex!=null && Number(d._teamIndex)!==Number(i)))return; CYBER_PRIVATE_KEYS.forEach(function(k){if(k==='historicoDecisoesGrupos'){if(d[k]!=null)appState[k][g]=d[k]}else if(String(d._rodadaId||'')===String(appState.identificadorSorteioAtual||'') && d[k]!=null)appState[k][g]=d[k]})});
-    if(screen && screen!=='screen-home' && screen!=='screen-grupo-login')appState.currentScreen=screen;
+    appState.currentScreen=screen;
     snapshotBase=JSON.parse(JSON.stringify(appState));
     sincronizacaoPronta=true;
     atualizarInterface();
@@ -1282,7 +1292,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     currentScreen: 'screen-home'
   };
 
-  var grupoAtivo = localStorage.getItem('cyber_rh_grupo_ativo') || '';
+  var grupoAtivo = sessionStorage.getItem('cyber_rh_grupo_ativo') || '';
 
   function fecharModal(id) { 
     var el = document.getElementById(id);
@@ -1304,6 +1314,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if (alvo) {
       alvo.classList.add('active');
       appState.currentScreen = id;
+      sessionStorage.setItem('cyber_rh_tela_local',id);
       if (id==='screen-grupo' || id==='screen-mestre') sessionStorage.setItem('cyber_rh_tela_autenticada',id);
       atualizarInterface();
     }
@@ -1560,6 +1571,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     appState.crises = {};
     appState.decisoes = {};
     appState.consultas = {};
+    appState.travasConsultorias = {};
     appState.pontuacoes = {};
     appState.cronometroCompeticao={etapa:'deliberacao',restante:900,status:'aguardando',terminaEm:0,sorteioId:'',alertas:{}};
     appState.tempoEsgotadoGlobal = false;
@@ -1618,6 +1630,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       appState.identificadorSorteioAtual = null;
       appState.decisoes = {};
       appState.consultas = {};
+    appState.travasConsultorias = {};
       appState.penalidadesGrupos = {};
       appState.orcamentosGrupos = {};
       appState.reservaRHUtilizada = {};
@@ -1683,6 +1696,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     atualizarTimerCompartilhado();
     appState.pontuacoes = {};
     appState.consultas = {};
+    appState.travasConsultorias = {};
     appState.grupos.forEach(function(g) {
       if (!appState.cartasSorteadasPorGrupo[g]) appState.cartasSorteadasPorGrupo[g] = [];
       appState.cartasSorteadasPorGrupo[g].push(atribuicoes[g].id);
@@ -1694,17 +1708,27 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
 
 
+  function criterioDesempate(g){
+    var hist=appState.historicoRodadas||[];
+    var vitorias=hist.reduce(function(n,h){var d=(h.decisoesRodada||h.decisoes||h.respostas||{})[g];return n+(d&&d.resultado==='vitoria'?1:0);},0);
+    if(appState.competicaoEncerrada && !appState.rodadaSalva && appState.decisoes?.[g]?.resultado==='vitoria')vitorias++;
+    var saldo=orcamentoAtual(g);
+    return {vitorias:vitorias,saldo:saldo};
+  }
+  function compararClassificacao(a,b){
+    return b.total-a.total || b.saldo-a.saldo || b.vitorias-a.vitorias || a.grupo.localeCompare(b.grupo,'pt-BR');
+  }
   function rankingFinalConcluido() {
     if ((appState.historicoRodadas || []).length !== 3 && !appState.competicaoEncerrada) return [];
     var hist = appState.historicoRodadas || [];
     var lista = (appState.grupos || []).map(function(g) {
       var salvo = hist.reduce(function(s,h){return s + Number(((h.placar || {})[g] || {}).total || 0);},0);
       var atual = appState.competicaoEncerrada && !appState.rodadaSalva && appState.pontuacoes && appState.pontuacoes[g] ? Number(appState.pontuacoes[g].total || 0) : 0;
-      return {grupo:g,total:salvo+atual};
+      return Object.assign({grupo:g,total:salvo+atual},criterioDesempate(g));
     });
-    lista.sort(function(a,b){return b.total-a.total || a.grupo.localeCompare(b.grupo,'pt-BR');});
-    var anterior=null, rank=0;
-    lista.forEach(function(item,i){if(item.total!==anterior){rank=i+1;anterior=item.total;}item.posicao=rank;});
+    lista.sort(compararClassificacao);
+    var anterior=null,rank=0;
+    lista.forEach(function(item,i){var chave=[item.total,item.saldo,item.vitorias].join('|');if(chave!==anterior){rank=i+1;anterior=chave;}item.posicao=rank;});
     return lista;
   }
   function fecharPodioFinal(){var el=document.getElementById('podio-final-overlay');if(el)el.classList.remove('aberto');}
@@ -1943,6 +1967,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var alvoBtn = document.getElementById('tab-btn-' + tab);
     if (alvoTab) alvoTab.style.display = 'block';
     if (alvoBtn) alvoBtn.classList.add('active');
+    sessionStorage.setItem('cyber_rh_mestre_tab',tab);
   }
 
   function switchGrupoTab(tab) {
@@ -1952,6 +1977,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var alvoTabBtn = document.getElementById('tab-grupo-' + tab);
     if (alvoPane) alvoPane.style.display = 'block';
     if (alvoTabBtn) alvoTabBtn.classList.add('active');
+    sessionStorage.setItem('cyber_rh_grupo_tab',tab);
     if (tab === 'missoes') renderMissaoCriseGrupo();
     if (tab === 'orientacoes' && alvoTabBtn) { alvoTabBtn.style.boxShadow = ''; alvoTabBtn.style.borderColor = ''; }
   }
@@ -1964,9 +1990,9 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if(senha===null)return;
     if(!await cyberSignIn('equipe',idx,senha))return;
     grupoAtivo=g;
-    localStorage.setItem('cyber_rh_grupo_ativo',g);
+    sessionStorage.setItem('cyber_rh_grupo_ativo',g);
     var header=document.getElementById('grupo-header-nome');if(header)header.innerText='Painel: '+g;
-    switchGrupoTab('decisao');mudarTela('screen-grupo');atualizarInterface();
+    switchGrupoTab(sessionStorage.getItem('cyber_rh_grupo_tab')||'decisao');mudarTela('screen-grupo');atualizarInterface();
   }
 
 
@@ -2050,7 +2076,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       histContainer.innerHTML = cLista.length === 0 ? 'Nenhuma consultoria solicitada.' : cLista.map(function(item, idx) {
         return '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; background:#0b0f19; padding:4px 8px; border-radius:4px;">' +
           '<span>• ' + escaparHTML(item.esp) + '</span>' +
-          (item.travado ? '<span style="color:var(--danger); font-size:0.75rem;">🔒 Travado</span>' : '<button class="btn-danger" onclick="estornarConsultoria(' + idx + ')" style="padding:2px 6px; font-size:0.7rem;">Cancelar</button>') +
+          (cyberConsultaTravada(g,item) ? '<span style="color:var(--danger); font-size:0.75rem;">🔒 Travado</span>' : '<button class="btn-danger" onclick="estornarConsultoria(' + idx + ')" style="padding:2px 6px; font-size:0.7rem;">Cancelar</button>') +
         '</div>';
       }).join('');
     }
@@ -2064,7 +2090,12 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if (!appState.crises[g]) { cyberAlert('Aguarde o sorteio da carta.'); return; }
     if (appState.decisoes && appState.decisoes[g]) { cyberAlert('A decisão já foi enviada.'); return; }
     if (orcamentoDisponivel(g) < 5) { cyberAlert('Saldo insuficiente.'); return; }
-    appState.consultas[g].push({ esp: esp, hora: new Date().toLocaleTimeString(), travado: false });
+    var carta=appState.crises[g];
+    if (!(carta.consultoresPermitidos||[]).includes(esp)) {cyberAlert('Consultor não disponível nesta carta.');return;}
+    var jaFeitas=appState.consultas[g].filter(function(x){return x.esp===esp;}).length;
+    if(jaFeitas>=2){cyberAlert('Limite de 2 consultas com este consultor por carta (4 no total).');return;}
+    if(appState.consultas[g].length>=4){cyberAlert('Limite de 4 consultas nesta carta.');return;}
+    appState.consultas[g].push({ id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8), esp: esp, hora: new Date().toLocaleTimeString(), travado: false });
     guardarEstado();
     renderPainelGrupo();
     avisoTemporario('Consultoria com ' + esp + ' registrada (-5 pts).');
@@ -2074,7 +2105,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var g = grupoAtivo;
     if (!g || !appState.consultas || !appState.consultas[g]) return;
     var item = appState.consultas[g][index];
-    if (item && item.travado) {
+    if (item && cyberConsultaTravada(g,item)) {
       cyberAlert("Esta consultoria foi travada pela Banca e não pode ser cancelada.");
       return;
     }
@@ -2084,10 +2115,14 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
 
   function toggleTravaConsultaItem(g, index) {
-    if (!appState.consultas || !appState.consultas[g] || !appState.consultas[g][index]) return;
-    appState.consultas[g][index].travado = !appState.consultas[g][index].travado;
-    guardarEstado();
-    renderAlertaConsultoriasMestre();
+    if(cyberRole!=='mestre'){cyberAlert('Somente o Mestre pode alterar a trava.');return;}
+    var item=(appState.consultas?.[g]||[])[index];
+    if(!item)return;
+    if(!appState.travasConsultorias)appState.travasConsultorias={};
+    var chave=cyberConsultaChave(g,item);
+    if(appState.travasConsultorias[chave])delete appState.travasConsultorias[chave];
+    else appState.travasConsultorias[chave]=true;
+    guardarEstado();renderAlertaConsultoriasMestre();
   }
 
   async function enviarDecisaoGrupo() {
@@ -2095,6 +2130,10 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var c = appState.crises && appState.crises[g];
     if (!g || !c) return;
     if (appState.rodadaSalva || appState.competicaoEncerrada) { cyberAlert('Rodada encerrada: respostas bloqueadas.'); return; }
+    var tempoEnvio=estadoTimer();
+    if (tempoEnvio.status==='encerrado' || (tempoEnvio.status==='rodando' && tempoRestanteTimer(tempoEnvio)===0)) {
+      cyberAlert('Deliberação encerrada: não é possível enviar novas respostas.'); return;
+    }
     if (appState.decisoes && appState.decisoes[g]) { cyberAlert('Decisão já registrada.'); return; }
 
     var opt1Checked = document.querySelector('input[name="opt_q1_' + g + '"]:checked');
@@ -2122,21 +2161,21 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var cLista = (appState.consultas && appState.consultas[g]) || [];
     
     var saldoAntesBoss = orcamentoDisponivel(g);
-    // Reserva estratégica única por equipe, liberada apenas se não houver 10 pontos
+    // Reserva estratégica única por equipe, liberada se o saldo for inferior ao custo de 20 pontos
     // para financiar a implementação. O usuário confirma a liberação.
     if (!appState.reservaRHUtilizada) appState.reservaRHUtilizada = {};
     var reservaAcionada = false;
-    if (saldoAntesBoss < 10 && !appState.reservaRHUtilizada[g]) {
+    if (saldoAntesBoss < 20 && !appState.reservaRHUtilizada[g]) {
       if (await cyberConfirm('Orçamento insuficiente para implementar a política de RH. Liberar a reserva estratégica única de 15 pontos para esta equipe?')) {
         reservaAcionada = true;
         saldoAntesBoss += 15;
       }
     }
-    var implementada = saldoAntesBoss >= 10;
+    var implementada = saldoAntesBoss >= 20;
     if (!implementada && !await cyberConfirm('Sem orçamento suficiente, a política NÃO será implementada. A equipe ainda pode registrar suas respostas, mas terá 0 pontos de recursos e não receberá bônus orçamentário. Continuar?')) return;
     var impactoBoss = resultadoCombate === 'vitoria' ? 10 : (resultadoCombate === 'parcial' ? 5 : -15);
     // Custo operacional fixo, cobrado uma única vez na submissão de cada equipe.
-    var custoOperacional = 10;
+    var custoOperacional = 20;
     // Resultado positivo só gera retorno se a estratégia foi implementada.
     var impactoEfetivo = implementada ? impactoBoss : Math.min(0, impactoBoss);
     var saldoDepoisBoss = limitar(saldoAntesBoss - (implementada ? custoOperacional : 0) + impactoEfetivo,0,120);
@@ -2316,7 +2355,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         total++;
         html += '<div style="background:#0b0f19; padding:8px; border-radius:6px; margin-bottom:6px;"><strong>' + g + ':</strong><br>';
         cList.forEach(function(item, index) {
-          var travado = item.travado;
+          var travado = cyberConsultaTravada(g,item);
           var estiloBtn = travado ? "background:var(--danger); color:white;" : "background:var(--success); color:white;";
           var textoBtn = travado ? "🔒 Travado (Estorno Bloqueado)" : "🔓 Destravado (Estorno Permitido)";
           html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; gap:8px;">' +
@@ -2551,15 +2590,65 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     }).join('') : '<p class="subtitle">Nenhum comunicado ativo.</p>';
   }
 
+  var cyberAlertaRodadaChave='',cyberUltimoRestante=901,cyberAvisosTempo={},cyberFimTimerEmCurso=false;
+  var cyberAudioContext=null;
+  function tocarAlarmeCyber(urgente){
+    try {
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return;
+      cyberAudioContext=cyberAudioContext||new AC();
+      if(cyberAudioContext.state==='suspended')cyberAudioContext.resume();
+      var agora=cyberAudioContext.currentTime;
+      for(var i=0;i<(urgente?3:2);i++){
+        var osc=cyberAudioContext.createOscillator(),ganho=cyberAudioContext.createGain();
+        osc.type='sine';osc.frequency.value=urgente?900:680;
+        ganho.gain.setValueAtTime(0.0001,agora+i*.28);
+        ganho.gain.exponentialRampToValueAtTime(.14,agora+i*.28+.02);
+        ganho.gain.exponentialRampToValueAtTime(.0001,agora+i*.28+.20);
+        osc.connect(ganho);ganho.connect(cyberAudioContext.destination);
+        osc.start(agora+i*.28);osc.stop(agora+i*.28+.22);
+      }
+    }catch(e){console.warn('Áudio indisponível:',e);}
+  }
+  var cyberApresentacaoKey='cyber_rh_apresentacao_60m_v1';
+  function lerApresentacao(){
+    try{return Object.assign({status:'aguardando',restante:3600,terminaEm:0},JSON.parse(localStorage.getItem(cyberApresentacaoKey)||'{}'));}
+    catch(e){return {status:'aguardando',restante:3600,terminaEm:0};}
+  }
+  function gravarApresentacao(v){localStorage.setItem(cyberApresentacaoKey,JSON.stringify(v));atualizarApresentacao();}
+  function restanteApresentacao(v){return Math.max(0,v.status==='rodando'?Math.ceil((v.terminaEm-Date.now())/1000):v.restante);}
+  function iniciarApresentacao(){
+    var v=lerApresentacao();if(v.status==='rodando')return;
+    v.restante=v.status==='encerrado'?3600:restanteApresentacao(v);
+    v.terminaEm=Date.now()+v.restante*1000;v.status='rodando';gravarApresentacao(v);
+  }
+  function pausarApresentacao(){
+    var v=lerApresentacao();if(v.status!=='rodando')return;
+    v.restante=restanteApresentacao(v);v.terminaEm=0;v.status='pausado';gravarApresentacao(v);
+  }
+  async function reiniciarApresentacao(){
+    if(!await cyberConfirm('Reiniciar o relógio da apresentação para 60 minutos?'))return;
+    gravarApresentacao({status:'aguardando',restante:3600,terminaEm:0});
+  }
+  var cyberAvisoApresentacao='';
+  function atualizarApresentacao(){
+    var v=lerApresentacao(),seg=restanteApresentacao(v);
+    var display=document.getElementById('display-apresentacao');
+    if(display){display.textContent=String(Math.floor(seg/60)).padStart(2,'0')+':'+String(seg%60).padStart(2,'0');display.classList.toggle('cyber-tempo-critico',v.status==='rodando'&&seg<=30);}
+    var status=document.getElementById('status-apresentacao');
+    if(status)status.textContent=v.status==='rodando'?(seg?'Apresentação em andamento':'Tempo encerrado'):v.status==='pausado'?'Pausado':v.status==='encerrado'?'Tempo encerrado':'Aguardando início';
+    if(v.status==='rodando'&&seg<=30&&cyberAvisoApresentacao!==String(v.terminaEm)){
+      cyberAvisoApresentacao=String(v.terminaEm);
+      tocarAlarmeCyber(true);
+      if(typeof avisoTemporario==='function')avisoTemporario('Apresentação: faltam 30 segundos!');
+    }
+    if(v.status==='rodando'&&seg===0){v.status='encerrado';v.restante=0;v.terminaEm=0;localStorage.setItem(cyberApresentacaoKey,JSON.stringify(v));}
+  }
   var timerMaster, masterTime = 900, ultimoAlertaTempo = '';
   function estadoTimer() { var t=appState.cronometroCompeticao || { etapa:'deliberacao', restante:900, status:'aguardando', terminaEm:0 }; if(t.status!=='rodando' && Number(t.restante)===600) return Object.assign({},t,{restante:900}); return t; }
   function tempoRestanteTimer(t) { return Math.max(0, t.status === 'rodando' ? Math.ceil((Number(t.terminaEm)-Date.now())/1000) : Number(t.restante || 0)); }
   function publicarTimer(t) { appState.cronometroCompeticao=t; guardarEstado(); atualizarTimerCompartilhado(); }
-  async function setMasterTimerStage() {
-    var etapa=document.getElementById('stage-timer-select').value;
-    if (!await cyberConfirm('Mudar de etapa e reiniciar o cronômetro?')) { atualizarTimerCompartilhado(); return; }
-    publicarTimer({etapa:etapa,restante:900,status:'pausado',terminaEm:0,equipeIndex:0,alertas:{}});
-  }
+  function setMasterTimerStage() { /* Etapa única: deliberação. */ }
   function updateTimerDisplay() { atualizarTimerCompartilhado(); }
   function startMasterTimer() {
     var t=Object.assign({},estadoTimer());
@@ -2608,17 +2697,43 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   function atualizarTimerCompartilhado() {
     var t=estadoTimer(), seg=tempoRestanteTimer(t), mm=String(Math.floor(seg/60)).padStart(2,'0'), ss=String(seg%60).padStart(2,'0');
     var display=document.getElementById('display-master-timer');if(display)display.textContent=mm+':'+ss;
-    var select=document.getElementById('stage-timer-select');if(select && document.activeElement!==select)select.value=t.etapa||'deliberacao';
-    var etapa=t.etapa==='debriefing'?'Debriefing':'Deliberação coletiva';
+    
+    var etapa='Deliberação coletiva';
     var status=t.status==='rodando'?(seg?'Em andamento':'Tempo encerrado'):t.status==='pausado'?'Pausado':t.status==='encerrado'?(t.encerramentoMotivo==='todas_decisoes'?'Encerrado: todas as decisões recebidas':'Encerrado'):'Aguardando distribuição';
     var st=document.getElementById('timer-status');if(st)st.textContent=etapa+' • '+status;
-    var info=document.getElementById('timer-stage-info');if(info)info.textContent=t.etapa==='debriefing'?'10 minutos para feedback e encerramento.':'15 minutos a partir da entrega da última carta.';
+    var info=document.getElementById('timer-stage-info');if(info)info.textContent='15 minutos a partir da entrega da última carta.';
     var grupo=document.getElementById('cronometro-compartilhado-equipe');
     if(grupo){grupo.style.display=t.status==='aguardando'||!document.getElementById('screen-grupo')?.classList.contains('active')?'none':'block';grupo.textContent=etapa+' • '+mm+':'+ss+' • '+status;}
     if(t.status==='rodando' && t.etapa==='deliberacao'){
-      var alerta=seg===300?'Faltam 5 minutos!':seg===60?'Falta 1 minuto!':seg===30?'Faltam 30 segundos!':seg===0?'Tempo de deliberação encerrado!':'';
-      if(alerta && ultimoAlertaTempo!==String(t.terminaEm)+'-'+seg){ultimoAlertaTempo=String(t.terminaEm)+'-'+seg;if(typeof avisoTemporario==='function')avisoTemporario(alerta);}
+      var limiares=[450,90,30,0],chave=String(t.sorteioId||t.terminaEm);
+      if(chave!==cyberAlertaRodadaChave){cyberAlertaRodadaChave=chave;cyberUltimoRestante=901;cyberAvisosTempo={};}
+      for(var k=0;k<limiares.length;k++){
+        var limite=limiares[k];
+        if(cyberUltimoRestante>limite && seg<=limite && !cyberAvisosTempo[limite]){
+          cyberAvisosTempo[limite]=true;
+          var aviso=limite===450?'Faltam 7 minutos e 30 segundos!':limite===90?'Falta 1 minuto e 30 segundos!':limite===30?'ATENÇÃO: faltam 30 segundos!':'Tempo de deliberação encerrado!';
+          if(typeof avisoTemporario==='function')avisoTemporario(aviso);
+          tocarAlarmeCyber(limite===30||limite===0);
+        }
+      }
+      cyberUltimoRestante=seg;
+      if(seg===0 && cyberRole==='mestre' && !cyberFimTimerEmCurso && window.rtdbRunTransaction && window.db){
+        cyberFimTimerEmCurso=true;
+        var r=window.rtdbRef(window.db,CYBER_BASE+'/publico/cronometroCompeticao');
+        window.rtdbRunTransaction(r,function(atual){
+          if(!atual||atual.status!=='rodando'||atual.sorteioId!==t.sorteioId||Number(atual.terminaEm)>Date.now())return;
+          return Object.assign({},atual,{status:'encerrado',restante:0,terminaEm:0,encerramentoMotivo:'tempo_esgotado'});
+        },{applyLocally:false}).finally(function(){cyberFimTimerEmCurso=false;});
+      }
     }
+    if(grupo){
+      var urgente=t.status==='rodando' && seg<=30;
+      grupo.classList.toggle('cyber-tempo-critico',urgente);
+      grupo.textContent=etapa+' • '+mm+':'+ss+' • '+status+(urgente?' • ENVIE AGORA!':'');
+    }
+    if(display)display.classList.toggle('cyber-tempo-critico',t.status==='rodando' && seg<=30);
+    atualizarApresentacao();
+
   }
   setInterval(atualizarTimerCompartilhado,500);
 
@@ -2632,11 +2747,12 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       var atual = appState.rodadaSalva ? 0 : Number(p.total || 0);
       return { grupo:g, auto:(Number(p.fund)||0)+(Number(p.viab)||0)+(Number(p.saldo)||0), rodada:atual, total:acumulado+atual };
     });
-    lista.sort(function(a,b) { return b.total - a.total; });
+    lista.forEach(function(x){Object.assign(x,criterioDesempate(x.grupo));});
+    lista.sort(compararClassificacao);
     var botaoPodio=document.getElementById('btn-rever-podio');
     if(botaoPodio)botaoPodio.style.display=(hist.length===3||appState.competicaoEncerrada)?'block':'none';
     tbody.innerHTML = lista.map(function(item, idx) {
-      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.rodada + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' / 300 pts</strong></td></tr>';
+      return '<tr><td>' + (idx+1) + 'º</td><td>' + escaparHTML(item.grupo) + '</td><td>' + item.rodada + ' pts</td><td><strong style="color:var(--cyan);">' + item.total + ' / 300 pts</strong><div style="font-size:.7rem;color:var(--text-muted)">Saldo: '+item.saldo+' • Vitórias: '+item.vitorias+'</div></td></tr>';
     }).join('');
   }
 
@@ -2714,7 +2830,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var baseRef=window.rtdbRef(window.db,CYBER_BASE+'/publico');
     atualizarStatusSeguranca('Restaurando...');
     // Atualiza a raiz por substituição de seus campos, incluindo exclusões antigas.
-    var alteracoes={}; diferencasEstado(snapshotBase || {},novo,[],alteracoes);
+    var alteracoes={}; diferencasEstado(cyberPublicOnly(snapshotBase || {}),cyberPublicOnly(novo),[],alteracoes);
     if(!Object.keys(alteracoes).length){atualizarStatusSeguranca('Estado já está atualizado');return;}
     window.rtdbUpdate(baseRef,alteracoes).then(function(){atualizarStatusSeguranca('Restauração sincronizada');avisoTemporario('Cópia restaurada com sucesso.');}).catch(function(e){console.error(e);atualizarStatusSeguranca('Falha na restauração');cyberAlert('Não foi possível restaurar no Firebase. O estado remoto não foi confirmado.');});
   }
@@ -2746,7 +2862,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         },{applyLocally:false}).catch(function(e){console.error(e);cyberAlert('Falha ao sincronizar dados da equipe.');});
       }
       cyberPrivateState[i]=JSON.parse(JSON.stringify(privado));
-      // Dados públicos, como pontuação e orçamento, só podem ser escritos pelo Mestre.
+      // Somente decisões, consultas e histórico privado da equipe são gravados por ela; estado da partida e travas continuam públicos para sincronização.
     }
   }
 
@@ -2758,7 +2874,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
 <!-- SINCRONIZAÇÃO PROTEGIDA: FIREBASE AUTH + REALTIME DATABASE -->
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js';
-import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,setPersistence,browserLocalPersistence} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js';
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,setPersistence,browserSessionPersistence} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js';
 import {getDatabase,ref,set,update,onValue,runTransaction} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js';
 const config={apiKey:'AIzaSyAkzK08rwDpigza4KylOE-Qty2XwD2modg',authDomain:'rpg-gp-5.firebaseapp.com',databaseURL:'https://rpg-gp-5-default-rtdb.firebaseio.com',projectId:'rpg-gp-5',storageBucket:'rpg-gp-5.firebasestorage.app',messagingSenderId:'296654029932',appId:'1:296654029932:web:3288d89ff8c8c0b0740449'};
 const ids=['0E49XN16RUbfAwAfsHKMwCtJIbu1','BxSvhIPJn5gw0yyKMDPxxBHgfkr2','eIxdFa4rcmcrbtKG7z6XPMZpQx42','CmHI0tyMewROufDFoxUEiHEXuha2','GmhceJ93KpeRDhYoCC2GAjC4rh02','LmfB966t7ERahXQ7Y6plSUweg9A2'];
@@ -2770,14 +2886,14 @@ let sessaoRestaurada=false;
 function restaurarTelaAutenticada(role,idx){
  if(sessaoRestaurada)return;
  sessaoRestaurada=true;
- if(role==='mestre'){mudarTela('screen-mestre');return;}
+ if(role==='mestre'){mudarTela('screen-mestre');switchMestreTab(sessionStorage.getItem('cyber_rh_mestre_tab')||'mestre-setup');return;}
  if(role==='equipe' && idx>=0){
   grupoAtivo=(appState.grupos||[])[idx]||'';
   if(!grupoAtivo){sessaoRestaurada=false;return;}
-  localStorage.setItem('cyber_rh_grupo_ativo',grupoAtivo);
+  sessionStorage.setItem('cyber_rh_grupo_ativo',grupoAtivo);
   const header=document.getElementById('grupo-header-nome');
   if(header)header.textContent='Painel: '+grupoAtivo;
-  switchGrupoTab('decisao');
+  switchGrupoTab(sessionStorage.getItem('cyber_rh_grupo_tab')||'decisao');
   mudarTela('screen-grupo');
  }
 }
@@ -2828,7 +2944,7 @@ async function publicarResultadoPendente(i,d){
 }
 window.cyberAuthLogin=async function(role,idx,password){
  const email=role==='mestre'?'mestre@cyberrh.example':'equipe'+(idx+1)+'@cyberrh.example';
- await setPersistence(auth,browserLocalPersistence);
+ await setPersistence(auth,browserSessionPersistence);
  const cred=await signInWithEmailAndPassword(auth,email,password);
  const expected=role==='mestre'?mestre:ids[idx];
  if(cred.user.uid!==expected){await signOut(auth);throw Error('UID não corresponde ao perfil');}
